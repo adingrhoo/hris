@@ -1,0 +1,99 @@
+<div class="page-title">
+    <h2>Dashboard Eksekutif & HR</h2>
+    <p>Ringkasan data kepegawaian dan aktivitas pemantauan sistem secara real-time.</p>
+</div>
+
+<!-- Stats Grid (KPI Cards) -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue"><i class="fa-solid fa-users"></i></div>
+        <div class="stat-details">
+            <h3>Total Karyawan</h3>
+            <p class="stat-number">248</p>
+            <span class="stat-trend positive"><i class="fa-solid fa-arrow-up"></i> +4 bulan ini</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green"><i class="fa-solid fa-user-check"></i></div>
+        <div class="stat-details">
+            <h3>Hadir Hari Ini</h3>
+            <p class="stat-number">232</p>
+            <span class="stat-trend positive">93.5% Kehadiran</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange"><i class="fa-solid fa-person-walking-luggage"></i></div>
+        <div class="stat-details">
+            <h3>Cuti Hari Ini</h3>
+            <p class="stat-number">12</p>
+            <span class="stat-trend neutral">Disetujui</span>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon red"><i class="fa-solid fa-list-check"></i></div>
+        <div class="stat-details">
+            <h3>Pending Approvals</h3>
+            <p class="stat-number">8</p>
+            <span class="stat-trend negative">Perlu Atensi HR</span>
+        </div>
+    </div>
+</div>
+
+<!-- Content Grid -->
+<div class="content-grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Karyawan Terbaru (Entity: employees)</h3>
+            <a href="#" class="btn-link">Lihat Semua</a>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Departemen</th>
+                        <th>Posisi</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Ahmad Fauzi</td>
+                        <td>Engineering</td>
+                        <td>Frontend Developer</td>
+                        <td><span class="badge-status active">Aktif</span></td>
+                    </tr>
+                    <tr>
+                        <td>Dewi Lestari</td>
+                        <td>Marketing</td>
+                        <td>Content Specialist</td>
+                        <td><span class="badge-status active">Aktif</span></td>
+                    </tr>
+                    <tr>
+                        <td>Budi Santoso</td>
+                        <td>Finance</td>
+                        <td>Accountant</td>
+                        <td><span class="badge-status probation">Probation</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Monitoring Pending Approval</h3>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--gray-text); margin-bottom: 16px;">Antrean tertunda di level manajer lini:</p>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="padding: 12px; background: var(--light-bg); border-radius: 8px; border-left: 3px solid var(--warning);">
+                <div style="font-weight: 600; font-size: 0.85rem;">Cuti Tahunan - Budi S.</div>
+                <div style="font-size: 0.75rem; color: var(--gray-text);">Menunggu approval Manager Eng. (3 Hari)</div>
+            </div>
+            <div style="padding: 12px; background: var(--light-bg); border-radius: 8px; border-left: 3px solid var(--danger);">
+                <div style="font-weight: 600; font-size: 0.85rem;">Lembur - Siti R.</div>
+                <div style="font-size: 0.75rem; color: var(--gray-text);">Menunggu approval Manager Mkt. (4 Jam)</div>
+            </div>
+        </div>
+    </div>
+</div>

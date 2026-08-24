@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HRIS Pro - Enterprise Portal</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Global Stylesheet -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+    <!-- App Container (Layout Dashboard Utama - Sembunyikan saat belum login) -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>HRIS Pro</span>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="active" data-module="dashboard"><a href="#"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li data-module="employees"><a href="#"><i class="fa-solid fa-user-group"></i> Karyawan (Core HR)</a></li>
+                <li data-module="organization"><a href="#"><i class="fa-solid fa-sitemap"></i> Organisasi</a></li>
+                <li data-module="attendance"><a href="#"><i class="fa-solid fa-calendar-check"></i> Kehadiran</a></li>
+                <li data-module="leave"><a href="#"><i class="fa-solid fa-person-walking-luggage"></i> Cuti & Izin</a></li>
+                <li data-module="approval"><a href="#"><i class="fa-solid fa-list-check"></i> Pusat Approval</a></li>
+                <li data-module="analytics"><a href="#"><i class="fa-solid fa-chart-pie"></i> Analitik & Laporan</a></li>
+                <li data-module="settings"><a href="#"><i class="fa-solid fa-gear"></i> Pengaturan & Akses</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="navbar-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" placeholder="Cari data karyawan, departemen...">
+                </div>
+                <div class="navbar-profile">
+                    <div class="notification-icon" title="Notifikasi Sistem">
+                        <i class="fa-regular fa-bell"></i>
+                        <span class="badge">3</span>
+                    </div>
+                    <div class="profile-info">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=faces" alt="Admin HR">
+                        <div>
+                            <h4>Siti Rahma</h4>
+                            <p>HR Administrator</p>
+                        </div>
+                    </div>
+                    <button id="btnLogout" class="btn-logout" title="Keluar Sistem"><i class="fa-solid fa-power-off"></i></button>
+                </div>
+            </header>
+
+            <!-- Dynamic Module Viewport -->
+            <div class="dashboard-body" id="moduleView">
+                <!-- Dashboard dimuat di sini -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Auth Container (Halaman Login) -->
+    <div id="authContainer" class="auth-wrapper">
+        <div class="auth-card">
+            <div style="text-align: center; margin-bottom: 28px;">
+                <i class="fa-solid fa-users-gear" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 12px;"></i>
+                <h2 style="font-size: 1.5rem; font-weight: 700;">HRIS Pro Admin</h2>
+                <p style="color: var(--gray-text); font-size: 0.85rem; margin-top: 4px;">Enterprise Human Resource Information System</p>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email / Username</label>
+                    <input type="text" class="form-control" value="admin@hrispro.com" required>
+                </div>
+                <!-- Input Password dengan Fitur Show/Hide (Ikon Mata) -->
+                <div class="form-group">
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="passwordInput" class="form-control" value="password123" required style="padding-right: 40px;">
+                        <i class="fa-solid fa-eye" id="togglePassword" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--gray-text);"></i>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.85rem;">
+                    <label style="color: var(--gray-text);"><input type="checkbox" checked style="margin-right: 6px;"> Remember Me</label>
+                    <a href="#" onclick="alert('Fitur reset password simulasi.')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Forgot Password?</a>
+                </div>
+                <button type="submit" class="btn-primary">Sign In to Dashboard</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SPA Router & Controller Script -->
+    <script>
+        // Fungsi memuat modul secara asinkron (untuk dashboard, karyawan, dll)
+        async function loadModule(moduleName) {
+            const view = document.getElementById('moduleView');
+            try {
+                const response = await fetch(`modules/${moduleName}.html`);
+                if (!response.ok) throw new Error('Modul tidak ditemukan');
+                view.innerHTML = await response.text();
+            } catch (error) {
+                view.innerHTML = `<div class="card"><h3>Gagal memuat modul</h3><p>${error.message}</p></div>`;
+            }
+        }
+
+        // Navigasi Sidebar
+        document.addEventListener('click', function(e) {
+            const sidebarItem = e.target.closest('.sidebar-menu li');
+            if (sidebarItem) {
+                e.preventDefault();
+                document.querySelectorAll('.sidebar-menu li').forEach(i => i.classList.remove('active'));
+                sidebarItem.classList.add('active');
+                loadModule(sidebarItem.getAttribute('data-module'));
+            }
+        });
+
+        // Fungsi Tombol Login (Fake Login)
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('appContainer').style.display = 'flex';
+            loadModule('dashboard'); // Langsung muat dashboard utama
+        }
+
+        // Fungsi Tombol Logout
+        document.addEventListener('click', function(e) {
+            if (e.target && (e.target.id === 'btnLogout' || e.target.closest('#btnLogout'))) {
+                document.getElementById('appContainer').style.display = 'none';
+                document.getElementById('authContainer').style.display = 'flex';
+            }
+        });
+
+        // Fitur Show/Hide Password Interactivity
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'togglePassword') {
+                const passwordInput = document.getElementById('passwordInput');
+                if (passwordInput) {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    e.target.classList.toggle('fa-eye');
+                    e.target.classList.toggle('fa-eye-slash');
+                }
+            }
+        });
+    </script>
+</body>
+</html>
