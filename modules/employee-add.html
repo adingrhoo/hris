@@ -1,0 +1,276 @@
+<div class="module-container">
+    <!-- Header Modul & Tombol Kembali -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+            <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">Tambah Karyawan Baru</h2>
+            <p style="font-size: 0.85rem; color: #64748b; margin: 0;">Lengkapi data lengkap pegawai untuk kebutuhan profil dan administrasi sistem.</p>
+        </div>
+        <button onclick="loadModule('employees')" style="width: auto !important; flex: unset; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+            <i class="fa-solid fa-arrow-left"></i> Kembali
+        </button>
+    </div>
+
+    <!-- Form Container Utama -->
+    <form id="formAddEmployee" style="display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- Bagian 1: Informasi Personal -->
+        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">1. Informasi Personal</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Foto Profil (Untuk Header & Tabel) <span style="color: #ef4444;">*</span></label>
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: #f1f5f9; border: 1px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #94a3b8; overflow: hidden;">
+                            <i class="fa-solid fa-user" style="font-size: 1.2rem;"></i>
+                        </div>
+                        <input type="file" accept="image/*" style="font-size: 0.85rem; color: #475569; cursor: pointer;" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                    <input type="text" placeholder="Masukkan nama lengkap beserta gelar" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">NIK (Nomor Induk Kependudukan) <span style="color: #ef4444;">*</span></label>
+                        <input type="text" placeholder="Sesuai KTP" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jenis Kelamin <span style="color: #ef4444;">*</span></label>
+                        <select style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
+                            <option value="">Pilih Jenis Kelamin</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tempat & Tanggal Lahir <span style="color: #ef4444;">*</span></label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                            <input type="text" placeholder="Kota Lahir" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                            <input type="date" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Agama <span style="color: #ef4444;">*</span></label>
+                        <select style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
+                            <option value="">Pilih Agama</option>
+                            <option value="Islam">Islam</option>
+                            <option value="Kristen">Kristen</option>
+                            <option value="Katolik">Katolik</option>
+                            <option value="Hindu">Hindu</option>
+                            <option value="Buddha">Buddha</option>
+                            <option value="Konghucu">Konghucu</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Alamat Domisili <span style="color: #ef4444;">*</span></label>
+                    <textarea placeholder="Alamat lengkap tempat tinggal saat ini" rows="2" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box; resize: vertical;" required></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nomor Telepon / WhatsApp <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="inputTelp" placeholder="Contoh: 081234567890" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                        <span style="font-size: 0.75rem; color: #64748b; margin-top: 4px; display: block;">Hanya angka, minimal 10 digit, maksimal 13 digit.</span>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email Pribadi <span style="color: #ef4444;">*</span></label>
+                        <input type="email" id="inputEmailPribadi" placeholder="contoh@gmail.com" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                </div>
+
+                <!-- Kontak Darurat (Nama, Hubungan, No Telepon) -->
+                <div>
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Kontak Darurat (Emergency Contact) <span style="color: #ef4444;">*</span></label>
+                    <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.5fr; gap: 12px;">
+                        <div>
+                            <input type="text" id="inputDaruratNama" placeholder="Nama Kontak" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                            <span style="font-size: 0.7rem; color: #64748b; margin-top: 2px; display: block;">Hanya huruf</span>
+                        </div>
+                        <div>
+                            <select id="inputDaruratHubungan" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
+                                <option value="">Hubungan</option>
+                                <option value="Orang Tua">Orang Tua</option>
+                                <option value="Suami/Istri">Suami/Istri</option>
+                                <option value="Anak">Anak</option>
+                                <option value="Saudara Kandung">Saudara Kandung</option>
+                                <option value="Lainnya">Lainnya</option>
+                            </select>
+                        </div>
+                        <div>
+                            <input type="text" id="inputDaruratTelp" placeholder="No. Telepon" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                            <span style="font-size: 0.7rem; color: #64748b; margin-top: 2px; display: block;">10-13 digit angka</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian 2: Informasi Pekerjaan & Akademik -->
+        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">2. Informasi Pekerjaan & Akademik</h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Bergabung (Join Date) <span style="color: #ef4444;">*</span></label>
+                        <input type="date" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jenis Kontrak <span style="color: #ef4444;">*</span></label>
+                        <select style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
+                            <option value="">Pilih Status Kontrak</option>
+                            <option value="Tetap">Tetap</option>
+                            <option value="Kontrak">Kontrak</option>
+                            <option value="Probation">Probation</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Atasan Langsung (Supervisor / Manager) <span style="color: #ef4444;">*</span></label>
+                        <input type="text" placeholder="Nama atasan langsung" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Lokasi Penempatan / Cabang <span style="color: #ef4444;">*</span></label>
+                        <input type="text" placeholder="Contoh: Kantor Pusat Jakarta" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email Perusahaan (Corporate Email) <span style="color: #ef4444;">*</span></label>
+                        <input type="email" id="inputEmailPerusahaan" placeholder="nama@perusahaan.com" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Pendidikan Terakhir & Jurusan <span style="color: #ef4444;">*</span></label>
+                        <input type="text" placeholder="Contoh: S1 - Teknik Informatika" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bagian 3: Informasi Administratif & Pajak (Payroll) - Opsional -->
+        <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">3. Informasi Administratif & Pajak (Payroll) <span style="font-size: 0.85rem; font-weight: 400; color: #64748b;">(Opsional)</span></h3>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nomor Rekening Bank</label>
+                        <input type="text" placeholder="Nomor rekening untuk penggajian" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">No. BPJS Kesehatan / Ketenagakerjaan</label>
+                        <input type="text" placeholder="Nomor kepesertaan BPJS" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">NPWP</label>
+                        <input type="text" placeholder="Nomor Pokok Wajib Pajak" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Status PTKP (Pajak Penghasilan)</label>
+                        <select style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;">
+                            <option value="">Pilih Status PTKP</option>
+                            <option value="TK/0">TK/0 (Tidak Kawin, Tanpa Tanggungan)</option>
+                            <option value="TK/1">TK/1 (Tidak Kawin, 1 Tanggungan)</option>
+                            <option value="TK/2">TK/2 (Tidak Kawin, 2 Tanggungan)</option>
+                            <option value="TK/3">TK/3 (Tidak Kawin, 3 Tanggungan)</option>
+                            <option value="K/0">K/0 (Kawin, Tanpa Tanggungan)</option>
+                            <option value="K/1">K/1 (Kawin, 1 Tanggungan)</option>
+                            <option value="K/2">K/2 (Kawin, 2 Tanggungan)</option>
+                            <option value="K/3">K/3 (Kawin, 3 Tanggungan)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Aksi Form -->
+        <div style="display: flex; justify-content: flex-end; gap: 12px; background: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <button type="button" onclick="loadModule('employees')" style="padding: 10px 18px; background: white; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Batal
+            </button>
+            <button type="submit" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Simpan Karyawan
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputTelp = document.getElementById('inputTelp');
+        const inputDaruratNama = document.getElementById('inputDaruratNama');
+        const inputDaruratTelp = document.getElementById('inputDaruratTelp');
+        const form = document.getElementById('formAddEmployee');
+
+        // Validasi No Telepon Utama (Hanya Angka)
+        if (inputTelp) {
+            inputTelp.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Validasi Nama Kontak Darurat (Hanya Huruf)
+        if (inputDaruratNama) {
+            inputDaruratNama.addEventListener('input', function() {
+                this.value = this.value.replace(/[0-9]/g, '');
+            });
+        }
+
+        // Validasi No Telepon Kontak Darurat (Hanya Angka)
+        if (inputDaruratTelp) {
+            inputDaruratTelp.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Cek panjang No Telepon Karyawan
+                if (inputTelp.value.length < 10 || inputTelp.value.length > 13) {
+                    alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
+                    inputTelp.focus();
+                    return;
+                }
+
+                // Cek panjang No Telepon Kontak Darurat
+                if (inputDaruratTelp.value.length < 10 || inputDaruratTelp.value.length > 13) {
+                    alert('Nomor Telepon Kontak Darurat wajib diisi antara 10 hingga 13 digit.');
+                    inputDaruratTelp.focus();
+                    return;
+                }
+
+                // Cek Format Email
+                const emailInputs = form.querySelectorAll('input[type="email"]');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                for (let input of emailInputs) {
+                    if (!emailRegex.test(input.value)) {
+                        alert('Format email yang Anda masukkan tidak valid (contoh: nama@domain.com).');
+                        input.focus();
+                        return;
+                    }
+                }
+
+                alert('Simpan data karyawan berhasil!');
+                loadModule('employees');
+            });
+        }
+    });
+</script>
