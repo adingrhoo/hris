@@ -95,12 +95,22 @@
 
     <!-- SPA Router & Controller Script -->
     <script>
-        // Cek status sesi login saat halaman pertama kali dimuat atau direfresh
+        // Cek status sesi login dan modul terakhir saat halaman dimuat/direfresh
         window.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authContainer').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'flex';
-                loadModule('dashboard');
+                
+                const currentModule = localStorage.getItem('activeModule') || 'dashboard';
+                loadModule(currentModule);
+
+                document.querySelectorAll('.sidebar-menu li').forEach(i => {
+                    if (i.getAttribute('data-module') === currentModule) {
+                        i.classList.add('active');
+                    } else {
+                        i.classList.remove('active');
+                    }
+                });
             }
         });
 
@@ -116,30 +126,35 @@
             }
         }
 
-        // Navigasi Sidebar
+        // Navigasi Sidebar (Simpan modul aktif ke localStorage)
         document.addEventListener('click', function(e) {
             const sidebarItem = e.target.closest('.sidebar-menu li');
             if (sidebarItem) {
                 e.preventDefault();
                 document.querySelectorAll('.sidebar-menu li').forEach(i => i.classList.remove('active'));
                 sidebarItem.classList.add('active');
-                loadModule(sidebarItem.getAttribute('data-module'));
+                
+                const moduleName = sidebarItem.getAttribute('data-module');
+                loadModule(moduleName);
+                localStorage.setItem('activeModule', moduleName);
             }
         });
 
-        // Fungsi Tombol Login (Simpan status ke localStorage)
+        // Fungsi Tombol Login (Simpan status & modul ke localStorage)
         function handleLogin(e) {
             e.preventDefault();
             localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('activeModule', 'dashboard');
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
-            loadModule('dashboard'); // Langsung muat dashboard utama
+            loadModule('dashboard');
         }
 
-        // Fungsi Tombol Logout (Hapus status dari localStorage)
+        // Fungsi Tombol Logout (Hapus sesi dari localStorage)
         document.addEventListener('click', function(e) {
             if (e.target && (e.target.id === 'btnLogout' || e.target.closest('#btnLogout'))) {
                 localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('activeModule');
                 document.getElementById('appContainer').style.display = 'none';
                 document.getElementById('authContainer').style.display = 'flex';
             }
