@@ -1,21 +1,17 @@
 <div class="module-container">
-    <!-- Header Modul -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0;">Manajemen Karyawan</h2>
-        <button style="width: auto !important; flex: unset; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
+        <button onclick="loadModule('employee-add')" style="width: auto !important; flex: unset; display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap;">
             <i class="fa-solid fa-plus"></i> Tambah Karyawan
         </button>
     </div>
 
-    <!-- Filter & Pencarian Cepat -->
     <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-        <!-- Input Pencarian -->
         <div style="position: relative; width: 320px;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem;"></i>
             <input type="text" placeholder="Cari nama karyawan..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
         </div>
         
-        <!-- Dropdown Filter Status & Tooltip Pengingat -->
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="position: relative; display: inline-block;">
                 <i class="fa-solid fa-filter" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.85rem; pointer-events: none;"></i>
@@ -28,7 +24,6 @@
                 <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.8rem; pointer-events: none;"></i>
             </div>
             
-            <!-- Ikon Tooltip / Pengingat Database -->
             <i class="fa-solid fa-circle-exclamation" 
                title="Perhatian: Filter ini belum terhubung ke database" 
                onclick="alert('Pengingat: Filter status ini belum terhubung ke database dan masih bersifat statis.')" 
@@ -37,7 +32,6 @@
         </div>
     </div>
 
-    <!-- Tabel Daftar Karyawan -->
     <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; white-space: nowrap;">
             <thead>
@@ -53,7 +47,6 @@
                 </tr>
             </thead>
             <tbody style="color: #334155;">
-                <!-- Baris 1: Tetap -->
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
                         <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40&h=40&fit=crop&crop=faces" alt="" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
@@ -73,7 +66,6 @@
                         </button>
                     </td>
                 </tr>
-                <!-- Baris 2: Kontrak -->
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
                         <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=40&h=40&fit=crop&crop=faces" alt="" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
@@ -93,7 +85,6 @@
                         </button>
                     </td>
                 </tr>
-                <!-- Baris 3: Probation -->
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 12px 16px; display: flex; align-items: center; gap: 10px;">
                         <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=faces" alt="" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">
