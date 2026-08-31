@@ -36,7 +36,8 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">NIK (Nomor Induk Kependudukan) <span style="color: #ef4444;">*</span></label>
-                        <input type="text" placeholder="Sesuai KTP" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                        <input type="text" id="inputNik" maxlength="16" placeholder="Sesuai KTP (16 digit)" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                        <span style="font-size: 0.75rem; color: #64748b; margin-top: 4px; display: block;">Harus tepat 16 digit angka (tanpa huruf).</span>
                     </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jenis Kelamin <span style="color: #ef4444;">*</span></label>
@@ -212,10 +213,18 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const inputNik = document.getElementById('inputNik');
         const inputTelp = document.getElementById('inputTelp');
         const inputDaruratNama = document.getElementById('inputDaruratNama');
         const inputDaruratTelp = document.getElementById('inputDaruratTelp');
         const form = document.getElementById('formAddEmployee');
+
+        // Validasi NIK (Hanya Angka, Maksimal 16 Digit)
+        if (inputNik) {
+            inputNik.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
 
         // Validasi No Telepon Utama (Hanya Angka)
         if (inputTelp) {
@@ -242,6 +251,13 @@
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 
+                // Cek panjang NIK (Harus tepat 16 digit)
+                if (inputNik.value.length !== 16) {
+                    alert('NIK wajib diisi tepat 16 digit angka.');
+                    inputNik.focus();
+                    return;
+                }
+
                 // Cek panjang No Telepon Karyawan
                 if (inputTelp.value.length < 10 || inputTelp.value.length > 13) {
                     alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
