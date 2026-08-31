@@ -95,6 +95,15 @@
 
     <!-- SPA Router & Controller Script -->
     <script>
+        // Cek status sesi login saat halaman pertama kali dimuat atau direfresh
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('authContainer').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                loadModule('dashboard');
+            }
+        });
+
         // Fungsi memuat modul secara asinkron (untuk dashboard, karyawan, dll)
         async function loadModule(moduleName) {
             const view = document.getElementById('moduleView');
@@ -118,17 +127,19 @@
             }
         });
 
-        // Fungsi Tombol Login (Fake Login)
+        // Fungsi Tombol Login (Simpan status ke localStorage)
         function handleLogin(e) {
             e.preventDefault();
+            localStorage.setItem('isLoggedIn', 'true');
             document.getElementById('authContainer').style.display = 'none';
             document.getElementById('appContainer').style.display = 'flex';
             loadModule('dashboard'); // Langsung muat dashboard utama
         }
 
-        // Fungsi Tombol Logout
+        // Fungsi Tombol Logout (Hapus status dari localStorage)
         document.addEventListener('click', function(e) {
             if (e.target && (e.target.id === 'btnLogout' || e.target.closest('#btnLogout'))) {
+                localStorage.removeItem('isLoggedIn');
                 document.getElementById('appContainer').style.display = 'none';
                 document.getElementById('authContainer').style.display = 'flex';
             }
