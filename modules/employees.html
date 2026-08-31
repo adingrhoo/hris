@@ -8,17 +8,33 @@
     </div>
 
     <!-- Filter & Pencarian Cepat -->
-    <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; gap: 12px; align-items: center; margin-bottom: 20px;">
-        <div style="position: relative; flex: 1; max-width: 320px;">
+    <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <!-- Input Pencarian -->
+        <div style="position: relative; width: 320px;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem;"></i>
             <input type="text" placeholder="Cari nama karyawan..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
         </div>
-        <select style="padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none;">
-            <option value="">Semua Status</option>
-            <option value="Tetap">Tetap</option>
-            <option value="Kontrak">Kontrak</option>
-            <option value="Probation">Probation</option>
-        </select>
+        
+        <!-- Dropdown Filter Status & Tooltip Pengingat -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="position: relative; display: inline-block;">
+                <i class="fa-solid fa-filter" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.85rem; pointer-events: none;"></i>
+                <select style="padding: 10px 36px 10px 36px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;">
+                    <option value="">Filter Status</option>
+                    <option value="Tetap">Tetap</option>
+                    <option value="Kontrak">Kontrak</option>
+                    <option value="Probation">Probation</option>
+                </select>
+                <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.8rem; pointer-events: none;"></i>
+            </div>
+            
+            <!-- Ikon Tooltip / Pengingat Database -->
+            <i class="fa-solid fa-circle-exclamation" 
+               title="Perhatian: Filter ini belum terhubung ke database" 
+               onclick="alert('Pengingat: Filter status ini belum terhubung ke database dan masih bersifat statis.')" 
+               style="color: #f59e0b; font-size: 1.1rem; cursor: pointer;" 
+               aria-label="Filter belum konek database"></i>
+        </div>
     </div>
 
     <!-- Tabel Daftar Karyawan -->
