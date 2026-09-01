@@ -1,6 +1,4 @@
-```html
 <div class="module-container">
-    <!-- Header Modul & Tombol Kembali -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
             <h2 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">Tambah Karyawan Baru</h2>
@@ -11,10 +9,8 @@
         </button>
     </div>
 
-    <!-- Form Container Utama -->
     <form id="formAddEmployee" style="display: flex; flex-direction: column; gap: 20px;">
         
-        <!-- Bagian 1: Informasi Personal -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">1. Informasi Personal</h3>
             
@@ -89,7 +85,6 @@
                     </div>
                 </div>
 
-                <!-- Kontak Darurat (Nama, Hubungan, No Telepon) -->
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Kontak Darurat (Emergency Contact) <span style="color: #ef4444;">*</span></label>
                     <div style="display: grid; grid-template-columns: 2fr 1.2fr 1.5fr; gap: 12px;">
@@ -116,16 +111,11 @@
             </div>
         </div>
 
-        <!-- Bagian 2: Informasi Pekerjaan -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">2. Informasi Pekerjaan</h3>
             
             <div style="display: flex; flex-direction: column; gap: 16px;">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div>
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Bergabung (Join Date) <span style="color: #ef4444;">*</span></label>
-                        <input type="date" id="inputJoinDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;" required>
-                    </div>
                     <div>
                         <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jenis Kontrak <span style="color: #ef4444;">*</span></label>
                         <select id="inputJenisKontrak" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
@@ -135,12 +125,18 @@
                             <option value="Probation">Probation</option>
                         </select>
                     </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Bergabung (Join Date) <span style="color: #ef4444;">*</span></label>
+                        <input type="date" id="inputJoinDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;" required>
+                    </div>
                 </div>
 
-                <!-- End Date hanya muncul untuk Kontrak / Probation -->
-                <div id="endDateContainer" style="display: none;">
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Berakhir (End Date) <span style="color: #ef4444;">*</span></label>
-                    <input type="date" id="inputEndDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;">
+                <div id="endDateContainer" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div></div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Berakhir (End Date) <span style="color: #ef4444;">*</span></label>
+                        <input type="date" id="inputEndDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; box-sizing: border-box;">
+                    </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -161,7 +157,6 @@
             </div>
         </div>
 
-        <!-- Bagian 3: Informasi Akademik -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">3. Informasi Akademik</h3>
             
@@ -206,7 +201,6 @@
             </div>
         </div>
 
-        <!-- Bagian 4: Informasi Administratif & Pajak (Payroll) - Opsional -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">4. Informasi Administratif & Pajak (Payroll) <span style="font-size: 0.85rem; font-weight: 400; color: #64748b;">(Opsional)</span></h3>
             
@@ -258,7 +252,6 @@
             </div>
         </div>
 
-        <!-- Tombol Aksi Form -->
         <div style="display: flex; justify-content: flex-end; gap: 12px; background: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <button type="button" onclick="loadModule('employees')" style="padding: 10px 18px; background: white; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 600; cursor: pointer;">
                 Batal
@@ -271,144 +264,139 @@
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const inputNik = document.getElementById('inputNik');
-        const inputTelp = document.getElementById('inputTelp');
-        const inputDaruratNama = document.getElementById('inputDaruratNama');
-        const inputDaruratTelp = document.getElementById('inputDaruratTelp');
-        const inputJoinDate = document.getElementById('inputJoinDate');
-        const inputJenisKontrak = document.getElementById('inputJenisKontrak');
-        const endDateContainer = document.getElementById('endDateContainer');
-        const inputEndDate = document.getElementById('inputEndDate');
-        const inputTahunMasuk = document.getElementById('inputTahunMasuk');
-        const inputIpk = document.getElementById('inputIpk');
-        const form = document.getElementById('formAddEmployee');
+    (function() {
+        function initAddEmployeeForm() {
+            const inputNik = document.getElementById('inputNik');
+            const inputTelp = document.getElementById('inputTelp');
+            const inputDaruratNama = document.getElementById('inputDaruratNama');
+            const inputDaruratTelp = document.getElementById('inputDaruratTelp');
+            const inputJoinDate = document.getElementById('inputJoinDate');
+            const inputJenisKontrak = document.getElementById('inputJenisKontrak');
+            const endDateContainer = document.getElementById('endDateContainer');
+            const inputEndDate = document.getElementById('inputEndDate');
+            const inputTahunMasuk = document.getElementById('inputTahunMasuk');
+            const inputIpk = document.getElementById('inputIpk');
+            const form = document.getElementById('formAddEmployee');
 
-        // Validasi NIK (Hanya Angka, Maksimal 16 Digit)
-        if (inputNik) {
-            inputNik.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-            });
-        }
+            if (!form) return;
 
-        // Validasi No Telepon Utama (Hanya Angka)
-        if (inputTelp) {
-            inputTelp.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-            });
-        }
+            // Validasi NIK (Hanya Angka, Maksimal 16 Digit)
+            if (inputNik) {
+                inputNik.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
 
-        // Validasi Nama Kontak Darurat (Hanya Huruf)
-        if (inputDaruratNama) {
-            inputDaruratNama.addEventListener('input', function() {
-                this.value = this.value.replace(/[0-9]/g, '');
-            });
-        }
+            // Validasi No Telepon Utama (Hanya Angka)
+            if (inputTelp) {
+                inputTelp.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
 
-        // Validasi No Telepon Kontak Darurat (Hanya Angka)
-        if (inputDaruratTelp) {
-            inputDaruratTelp.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '');
-            });
-        }
+            // Validasi Nama Kontak Darurat (Hanya Huruf)
+            if (inputDaruratNama) {
+                inputDaruratNama.addEventListener('input', function() {
+                    this.value = this.value.replace(/[0-9]/g, '');
+                });
+            }
 
-        // Dinamis: End Date hanya muncul untuk Kontrak / Probation
-        function updateEndDateField() {
-            const jenisKontrak = inputJenisKontrak ? inputJenisKontrak.value : '';
+            // Validasi No Telepon Kontak Darurat (Hanya Angka)
+            if (inputDaruratTelp) {
+                inputDaruratTelp.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '');
+                });
+            }
 
-            if (jenisKontrak === 'Kontrak' || jenisKontrak === 'Probation') {
-                if (endDateContainer) {
-                    endDateContainer.style.display = 'block';
-                }
+            // Dinamis: End Date muncul tepat di bawah Join Date (Kolom 2) untuk Kontrak / Probation
+            function updateEndDateField() {
+                const jenisKontrak = inputJenisKontrak ? inputJenisKontrak.value : '';
 
-                if (inputEndDate) {
-                    inputEndDate.required = true;
-
-                    // End Date tidak boleh sebelum Join Date
-                    if (inputJoinDate && inputJoinDate.value) {
-                        inputEndDate.min = inputJoinDate.value;
+                if (jenisKontrak === 'Kontrak' || jenisKontrak === 'Probation') {
+                    if (endDateContainer) {
+                        endDateContainer.style.display = 'grid';
                     }
-                }
-            } else {
-                if (endDateContainer) {
-                    endDateContainer.style.display = 'none';
-                }
 
-                if (inputEndDate) {
-                    inputEndDate.required = false;
-                    inputEndDate.value = '';
-                    inputEndDate.removeAttribute('min');
+                    if (inputEndDate) {
+                        inputEndDate.required = true;
+
+                        if (inputJoinDate && inputJoinDate.value) {
+                            inputEndDate.min = inputJoinDate.value;
+                        }
+                    }
+                } else {
+                    if (endDateContainer) {
+                        endDateContainer.style.display = 'none';
+                    }
+
+                    if (inputEndDate) {
+                        inputEndDate.required = false;
+                        inputEndDate.value = '';
+                        inputEndDate.removeAttribute('min');
+                    }
                 }
             }
-        }
 
-        if (inputJenisKontrak) {
-            inputJenisKontrak.addEventListener('change', updateEndDateField);
-        }
+            if (inputJenisKontrak) {
+                inputJenisKontrak.addEventListener('change', updateEndDateField);
+            }
 
-        if (inputJoinDate) {
-            inputJoinDate.addEventListener('change', function() {
-                if (inputEndDate && inputJoinDate.value) {
-                    inputEndDate.min = inputJoinDate.value;
+            if (inputJoinDate) {
+                inputJoinDate.addEventListener('change', function() {
+                    if (inputEndDate && inputJoinDate.value) {
+                        inputEndDate.min = inputJoinDate.value;
 
-                    // Jika End Date yang sudah dipilih menjadi tidak valid,
-                    // kosongkan agar user memilih ulang.
-                    if (inputEndDate.value && inputEndDate.value < inputJoinDate.value) {
-                        inputEndDate.value = '';
+                        if (inputEndDate.value && inputEndDate.value < inputJoinDate.value) {
+                            inputEndDate.value = '';
+                        }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        // Validasi Tahun Masuk
-        if (inputTahunMasuk) {
-            inputTahunMasuk.addEventListener('input', function() {
-                this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4);
-            });
-        }
+            // Validasi Tahun Masuk
+            if (inputTahunMasuk) {
+                inputTahunMasuk.addEventListener('input', function() {
+                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 4);
+                });
+            }
 
-        // Validasi IPK (maksimal 4.00)
-        if (inputIpk) {
-            inputIpk.addEventListener('input', function() {
-                if (parseFloat(this.value) > 4) {
-                    this.value = '4';
-                }
+            // Validasi IPK (maksimal 4.00)
+            if (inputIpk) {
+                inputIpk.addEventListener('input', function() {
+                    if (parseFloat(this.value) > 4) {
+                        this.value = '4';
+                    }
 
-                if (parseFloat(this.value) < 0) {
-                    this.value = '0';
-                }
-            });
-        }
+                    if (parseFloat(this.value) < 0) {
+                        this.value = '0';
+                    }
+                });
+            }
 
-        // Inisialisasi tampilan End Date
-        updateEndDateField();
+            // Inisialisasi awal tampilan End Date
+            updateEndDateField();
 
-        if (form) {
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
 
-                // Cek panjang NIK (Harus tepat 16 digit)
                 if (inputNik.value.length !== 16) {
                     alert('NIK wajib diisi tepat 16 digit angka.');
                     inputNik.focus();
                     return;
                 }
 
-                // Cek panjang No Telepon Karyawan
                 if (inputTelp.value.length < 10 || inputTelp.value.length > 13) {
                     alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
                     inputTelp.focus();
                     return;
                 }
 
-                // Cek panjang No Telepon Kontak Darurat
                 if (inputDaruratTelp.value.length < 10 || inputDaruratTelp.value.length > 13) {
                     alert('Nomor Telepon Kontak Darurat wajib diisi antara 10 hingga 13 digit.');
                     inputDaruratTelp.focus();
                     return;
                 }
 
-                // Cek End Date untuk Kontrak / Probation
                 if (inputJenisKontrak.value === 'Kontrak' || inputJenisKontrak.value === 'Probation') {
                     if (!inputEndDate.value) {
                         alert('Tanggal Berakhir (End Date) wajib diisi untuk jenis kontrak Kontrak atau Probation.');
@@ -423,7 +411,6 @@
                     }
                 }
 
-                // Cek IPK
                 if (inputIpk.value !== '') {
                     const ipk = parseFloat(inputIpk.value);
 
@@ -434,7 +421,6 @@
                     }
                 }
 
-                // Cek Format Email
                 const emailInputs = form.querySelectorAll('input[type="email"]');
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -450,6 +436,11 @@
                 loadModule('employees');
             });
         }
-    });
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAddEmployeeForm);
+        } else {
+            initAddEmployeeForm();
+        }
+    })();
 </script>
-```
