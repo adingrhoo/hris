@@ -4,17 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HRIS Pro - Enterprise Portal</title>
-    <!-- Google Fonts & FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Global Stylesheet -->
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <!-- App Container (Layout Dashboard Utama - Sembunyikan saat belum login) -->
     <div class="app-container" id="appContainer" style="display: none;">
-        <!-- Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-brand">
                 <i class="fa-solid fa-users-gear"></i>
@@ -32,9 +29,7 @@
             </ul>
         </aside>
 
-        <!-- Main Content Wrapper -->
         <main class="main-content">
-            <!-- Top Navbar -->
             <header class="top-navbar">
                 <div class="navbar-search">
                     <i class="fa-solid fa-magnifying-glass"></i>
@@ -56,14 +51,11 @@
                 </div>
             </header>
 
-            <!-- Dynamic Module Viewport -->
             <div class="dashboard-body" id="moduleView">
-                <!-- Dashboard dimuat di sini -->
-            </div>
+                </div>
         </main>
     </div>
 
-    <!-- Auth Container (Halaman Login) -->
     <div id="authContainer" class="auth-wrapper">
         <div class="auth-card">
             <div style="text-align: center; margin-bottom: 28px;">
@@ -76,7 +68,6 @@
                     <label>Email / Username</label>
                     <input type="text" class="form-control" value="admin@hrispro.com" required>
                 </div>
-                <!-- Input Password dengan Fitur Show/Hide (Ikon Mata) -->
                 <div class="form-group">
                     <label>Password</label>
                     <div style="position: relative;">
@@ -93,8 +84,15 @@
         </div>
     </div>
 
-    <!-- SPA Router & Controller Script -->
     <script>
+        // ==========================================
+        // INISIALISASI SUPABASE KLIEN GLOBAL
+        // ==========================================
+        const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co'; // Ganti dengan URL Supabase Anda
+        const SUPABASE_ANON_KEY = 'sb_publishable_burXWke6kJSJxourw9nixQ_iboSIbYi'; // Ganti dengan Anon/Public Key Supabase Anda
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // Cek status sesi login dan modul terakhir menggunakan sessionStorage
         window.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
