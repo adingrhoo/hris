@@ -84,12 +84,15 @@
     </div>
 
     <script>
-        let supabase = null;
+        // ==========================================
+        // INISIALISASI KLIEN DATABASE (MENGHINDARI KONFLIK NAMA)
+        // ==========================================
+        let dbClient = null;
         try {
             const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_burXWke6kJSJxourw9nixQ_iboSIbYi';
             if (window.supabase) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                dbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             }
         } catch (err) {
             console.error('Inisialisasi Supabase gagal:', err);
@@ -290,12 +293,12 @@
             const tbody = document.getElementById('departmentTableBody');
             if (!tbody) return;
 
-            if (!supabase) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Klien Supabase belum terinisialisasi.</td></tr>`;
+            if (!dbClient) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Klien database belum terinisialisasi.</td></tr>`;
                 return;
             }
 
-            const { data, error } = await supabase
+            const { data, error } = await dbClient
                 .from('departments')
                 .select('*')
                 .order('id', { ascending: true });
@@ -330,8 +333,8 @@
             if (!inputKodeDept) return;
 
             let generatedCode = 'DEP-001';
-            if (supabase) {
-                const { data } = await supabase
+            if (dbClient) {
+                const { data } = await dbClient
                     .from('departments')
                     .select('kode')
                     .order('id', { ascending: false })
@@ -363,7 +366,7 @@
                         return;
                     }
 
-                    const { data: checkExisting } = await supabase
+                    const { data: checkExisting } = await dbClient
                         .from('departments')
                         .select('kode')
                         .eq('kode', generatedCode);
@@ -374,7 +377,7 @@
                         return;
                     }
 
-                    const { error: insertError } = await supabase
+                    const { error: insertError } = await dbClient
                         .from('departments')
                         .insert([
                             { kode: generatedCode, nama: namaVal, hod: hodVal || null, status: statusVal }
