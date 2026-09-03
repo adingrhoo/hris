@@ -11,6 +11,7 @@
 
     <form id="formAddEmployee" style="display: flex; flex-direction: column; gap: 20px;">
         
+        <!-- Bagian 1: Informasi Personal -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">1. Informasi Personal</h3>
             
@@ -27,7 +28,7 @@
 
                 <div>
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
-                    <input type="text" placeholder="Masukkan nama lengkap beserta gelar" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    <input type="text" id="inputNama" placeholder="Masukkan nama lengkap beserta gelar" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -111,6 +112,7 @@
             </div>
         </div>
 
+        <!-- Bagian 2: Informasi Pekerjaan (Termasuk Divisi untuk Relasi Organisasi) -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">2. Informasi Pekerjaan</h3>
             
@@ -131,6 +133,7 @@
                     </div>
                 </div>
 
+                <!-- End Date (Tampil Dinamis) -->
                 <div id="endDateContainer" style="display: none; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div></div>
                     <div>
@@ -139,24 +142,39 @@
                     </div>
                 </div>
 
+                <!-- Divisi & Atasan Langsung untuk Integritas Relasi -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                     <div>
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Atasan Langsung (Supervisor / Manager) <span style="color: #ef4444;">*</span></label>
-                        <input type="text" placeholder="Nama atasan langsung" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Divisi / Departemen <span style="color: #ef4444;">*</span></label>
+                        <select id="inputDivisi" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; cursor: pointer;" required>
+                            <option value="">Pilih Divisi</option>
+                            <option value="Engineering / IT">Engineering / IT</option>
+                            <option value="Marketing / Growth">Marketing / Growth</option>
+                            <option value="Finance & Accounting">Finance & Accounting</option>
+                            <option value="Human Resources & Admin">Human Resources & Admin</option>
+                            <option value="Operations">Operations</option>
+                        </select>
                     </div>
                     <div>
-                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Lokasi Penempatan / Cabang <span style="color: #ef4444;">*</span></label>
-                        <input type="text" placeholder="Contoh: Kantor Pusat Jakarta" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Atasan Langsung (Supervisor / Manager) <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="inputAtasan" placeholder="Nama atasan langsung" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
                     </div>
                 </div>
 
-                <div>
-                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email Perusahaan (Corporate Email) <span style="color: #ef4444;">*</span></label>
-                    <input type="email" id="inputEmailPerusahaan" placeholder="nama@perusahaan.com" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Lokasi Penempatan / Cabang <span style="color: #ef4444;">*</span></label>
+                        <input type="text" id="inputLokasi" placeholder="Contoh: Kantor Pusat Jakarta" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Email Perusahaan (Corporate Email) <span style="color: #ef4444;">*</span></label>
+                        <input type="email" id="inputEmailPerusahaan" placeholder="nama@perusahaan.com" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;" required>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Bagian 3: Informasi Akademik -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">3. Informasi Akademik</h3>
             
@@ -201,6 +219,7 @@
             </div>
         </div>
 
+        <!-- Bagian 4: Informasi Administratif & Pajak (Payroll) -->
         <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <h3 style="font-size: 1.1rem; font-weight: 600; color: #1e293b; margin: 0 0 16px 0; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">4. Informasi Administratif & Pajak (Payroll) <span style="font-size: 0.85rem; font-weight: 400; color: #64748b;">(Opsional)</span></h3>
             
@@ -262,3 +281,126 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const inputNik = document.getElementById('inputNik');
+        const inputTelp = document.getElementById('inputTelp');
+        const inputDaruratNama = document.getElementById('inputDaruratNama');
+        const inputDaruratTelp = document.getElementById('inputDaruratTelp');
+        const inputJenisKontrak = document.getElementById('inputJenisKontrak');
+        const endDateContainer = document.getElementById('endDateContainer');
+        const inputEndDate = document.getElementById('inputEndDate');
+        const inputIpk = document.getElementById('inputIpk');
+        const form = document.getElementById('formAddEmployee');
+
+        // Logika Dinamis End Date
+        if (inputJenisKontrak) {
+            inputJenisKontrak.addEventListener('change', function() {
+                if (this.value === 'Kontrak' || this.value === 'Probation') {
+                    endDateContainer.style.display = 'grid';
+                    inputEndDate.setAttribute('required', 'true');
+                } else {
+                    endDateContainer.style.display = 'none';
+                    inputEndDate.removeAttribute('required');
+                    inputEndDate.value = '';
+                }
+            });
+        }
+
+        // Validasi NIK (Hanya Angka)
+        if (inputNik) {
+            inputNik.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Validasi No Telepon Utama (Hanya Angka)
+        if (inputTelp) {
+            inputTelp.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Validasi Nama Kontak Darurat (Hanya Huruf)
+        if (inputDaruratNama) {
+            inputDaruratNama.addEventListener('input', function() {
+                this.value = this.value.replace(/[0-9]/g, '');
+            });
+        }
+
+        // Validasi No Telepon Kontak Darurat (Hanya Angka)
+        if (inputDaruratTelp) {
+            inputDaruratTelp.addEventListener('input', function() {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+
+        // Validasi Form saat Submit
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // 1. Validasi NIK (Tepat 16 digit)
+                if (inputNik.value.length !== 16) {
+                    alert('NIK wajib diisi tepat 16 digit angka.');
+                    inputNik.focus();
+                    return;
+                }
+
+                // 2. Validasi Panjang No Telepon Karyawan
+                if (inputTelp.value.length < 10 || inputTelp.value.length > 13) {
+                    alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
+                    inputTelp.focus();
+                    return;
+                }
+
+                // 3. Validasi Panjang No Telepon Kontak Darurat
+                if (inputDaruratTelp.value.length < 10 || inputDaruratTelp.value.length > 13) {
+                    alert('Nomor Telepon Kontak Darurat wajib diisi antara 10 hingga 13 digit.');
+                    inputDaruratTelp.focus();
+                    return;
+                }
+
+                // 4. Validasi IPK (0.00 - 4.00)
+                let ipkVal = parseFloat(inputIpk.value);
+                if (isNaN(ipkVal) || ipkVal < 0 || ipkVal > 4.00) {
+                    alert('IPK harus berupa angka yang valid antara 0.00 hingga 4.00.');
+                    inputIpk.focus();
+                    return;
+                }
+
+                // 5. Validasi Email
+                const emailInputs = form.querySelectorAll('input[type="email"]');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                
+                for (let input of emailInputs) {
+                    if (!emailRegex.test(input.value)) {
+                        alert('Format email yang Anda masukkan tidak valid (contoh: nama@domain.com).');
+                        input.focus();
+                        return;
+                    }
+                }
+
+                // Simpan data ke localStorage untuk modul employees
+                const newEmployee = {
+                    nama: document.getElementById('inputNama').value,
+                    jabatan: document.getElementById('inputJurusan').value ? document.getElementById('inputJurusan').value + ' Graduate' : 'Staff',
+                    divisi: document.getElementById('inputDivisi').value,
+                    atasan: document.getElementById('inputAtasan').value,
+                    joinDate: document.getElementById('inputJoinDate').value,
+                    endDate: inputEndDate.value || '-',
+                    status: inputJenisKontrak.value,
+                    foto: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=40&h=40&fit=crop&crop=faces"
+                };
+
+                let employees = JSON.parse(localStorage.getItem('hris_employees')) || [];
+                employees.push(newEmployee);
+                localStorage.setItem('hris_employees', JSON.stringify(employees));
+
+                alert('Simpan data karyawan berhasil!');
+                loadModule('employees');
+            });
+        }
+    });
+</script>
