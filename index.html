@@ -86,12 +86,18 @@
 
     <script>
         // ==========================================
-        // INISIALISASI SUPABASE KLIEN GLOBAL
+        // INISIALISASI SUPABASE KLIEN (DENGAN SAFEGUARD)
         // ==========================================
-        const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co'; // Ganti dengan URL Supabase Anda
-        const SUPABASE_ANON_KEY = 'sb_publishable_burXWke6kJSJxourw9nixQ_iboSIbYi'; // Ganti dengan Anon/Public Key Supabase Anda
-        
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let supabase = null;
+        try {
+            const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co';
+            const SUPABASE_ANON_KEY = 'sb_publishable_burXWke6kJSJxourw9nixQ_iboSIbYi';
+            if (window.supabase) {
+                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (err) {
+            console.error('Inisialisasi Supabase gagal:', err);
+        }
 
         // Cek status sesi login dan modul terakhir menggunakan sessionStorage
         window.addEventListener('DOMContentLoaded', () => {
@@ -160,13 +166,14 @@
 
         // Fitur Show/Hide Password Interactivity
         document.addEventListener('click', function(e) {
-            if (e.target && e.target.id === 'togglePassword') {
+            const toggleBtn = e.target.closest('#togglePassword');
+            if (toggleBtn) {
                 const passwordInput = document.getElementById('passwordInput');
                 if (passwordInput) {
                     const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
                     passwordInput.setAttribute('type', type);
-                    e.target.classList.toggle('fa-eye');
-                    e.target.classList.toggle('fa-eye-slash');
+                    toggleBtn.classList.toggle('fa-eye');
+                    toggleBtn.classList.toggle('fa-eye-slash');
                 }
             }
         });
