@@ -85,7 +85,7 @@
 
     <script>
         // ==========================================
-        // INISIALISASI KLIEN DATABASE (MENGHINDARI KONFLIK NAMA)
+        // INISIALISASI KLIEN DATABASE
         // ==========================================
         let dbClient = null;
         try {
@@ -127,6 +127,8 @@
                     fetchDepartmentsFromSupabase();
                 } else if (moduleName === 'organization-add') {
                     initOrganizationAdd();
+                } else if (moduleName === 'employees') {
+                    fetchEmployeesFromSupabase();
                 }
             } catch (error) {
                 view.innerHTML = `<div class="card"><h3>Gagal memuat modul</h3><p>${error.message}</p></div>`;
@@ -232,16 +234,23 @@
             }
         });
 
-        document.addEventListener('submit', function(e) {
+        // ==========================================
+        // INTEGRASI FORM TAMBAH KARYAWAN KE SUPABASE
+        // ==========================================
+        document.addEventListener('submit', async function(e) {
             if (e.target && e.target.id === 'formAddEmployee') {
                 e.preventDefault();
                 const inputNik = document.getElementById('inputNik');
+                const inputNama = document.getElementById('inputNama');
+                const inputEmail = document.getElementById('inputEmail');
                 const inputTelp = document.getElementById('inputTelp');
                 const inputDaruratTelp = document.getElementById('inputDaruratTelp');
                 const inputJenisKontrak = document.getElementById('inputJenisKontrak');
                 const inputEndDate = document.getElementById('inputEndDate');
                 const inputJoinDate = document.getElementById('inputJoinDate');
                 const inputIpk = document.getElementById('inputIpk');
+                const inputDepartemen = document.getElementById('inputDepartemen');
+                const inputJabatan = document.getElementById('inputJabatan');
 
                 if (inputNik && inputNik.value.length !== 16) {
                     alert('NIK wajib diisi tepat 16 digit angka.');
@@ -284,10 +293,83 @@
                     }
                 }
 
-                alert('Simpan data karyawan berhasil!');
+                if (!dbClient) {
+                    alert('Klien database belum terinisialisasi.');
+                    return;
+                }
+
+                // Kirim data ke tabel employees di Supabase
+                const { error: insertError } = await dbClient
+                    .from('employees')
+                    .insert([
+                        {
+                            nik: inputNik ? inputNik.value.trim() : null,
+                            name: inputNama ? inputNama.value.trim() : null,
+                            email: inputEmail ? inputEmail.value.trim() : null,
+                            telepon: inputTelp ? inputTelp.value.trim() : null,
+                            kontak_darurat_telepon: inputDaruratTelp ? inputDaruratTelp.value.trim() : null,
+                            jenis_kontrak: inputJenisKontrak ? inputJenisKontrak.value : null,
+                            join_date: inputJoinDate && inputJoinDate.value ? inputJoinDate.value : null,
+                            end_date: inputEndDate && inputEndDate.value ? inputEndDate.value : null,
+                            ipk: inputIpk && inputIpk.value !== '' ? parseFloat(inputIpk.value) : null,
+                            department: inputDepartemen ? inputDepartemen.value : null,
+                            position: inputJabatan ? inputJabatan.value.trim() : null,
+                            status: 'Aktif'
+                        }
+                    ]);
+
+                if (insertError) {
+                    alert('Gagal menyimpan data karyawan: ' + insertError.message);
+                    return;
+                }
+
+                alert('Simpan data karyawan ke database berhasil!');
                 loadModule('employees');
             }
         });
+
+        // ==========================================
+        // FETCH DATA KARYAWAN DARI SUPABASE
+        // ==========================================
+        async function fetchEmployeesFromSupabase() {
+            const tbody = document.getElementById('employeeTableBody');
+            if (!tbody) return;
+
+            if (!dbClient) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #ef4444;">Klien database belum terinisialisasi.</td></tr>`;
+                return;
+            }
+
+            const { data, error } = await dbClient
+                .from('employees')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan. Silakan tambahkan baru.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(emp => {
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px; font-weight: 600; color: #1e293b;">${emp.nik || '-'}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${emp.name || '-'}</td>
+                        <td style="padding: 14px 20px; color: #64748b;">${emp.department || '-'}</td>
+                        <td style="padding: 14px 20px; color: #64748b;">${emp.position || '-'}</td>
+                        <td style="padding: 14px 20px;">
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: ${emp.status === 'Aktif' ? '#dcfce7; color: #15803d;' : '#f1f5f9; color: #475569;'}">${emp.status || 'Aktif'}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         async function fetchDepartmentsFromSupabase() {
             const tbody = document.getElementById('departmentTableBody');
