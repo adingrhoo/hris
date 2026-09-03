@@ -172,6 +172,147 @@
                 }
             }
         });
+
+        // ==========================================
+        // GLOBAL EVENT DELEGATION UNTUK FORM KARYAWAN
+        // ==========================================
+
+        // Validasi Input Real-time (Angka / Huruf)
+        document.addEventListener('input', function(e) {
+            if (!e.target) return;
+
+            // NIK, No Telepon Utama, & No Telepon Darurat (Hanya Angka)
+            if (e.target.id === 'inputNik' || e.target.id === 'inputTelp' || e.target.id === 'inputDaruratTelp') {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            }
+
+            // Nama Kontak Darurat (Hanya Huruf)
+            if (e.target.id === 'inputDaruratNama') {
+                e.target.value = e.target.value.replace(/[0-9]/g, '');
+            }
+
+            // Tahun Masuk Akademik
+            if (e.target.id === 'inputTahunMasuk') {
+                e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+            }
+
+            // IPK (0 - 4.00)
+            if (e.target.id === 'inputIpk') {
+                let val = parseFloat(e.target.value);
+                if (val > 4) e.target.value = '4';
+                if (val < 0) e.target.value = '0';
+            }
+        });
+
+        // Kontrol Dinamis End Date & Join Date
+        document.addEventListener('change', function(e) {
+            if (!e.target) return;
+
+            // Munculkan End Date jika Kontrak / Probation dipilih
+            if (e.target.id === 'inputJenisKontrak') {
+                const endDateContainer = document.getElementById('endDateContainer');
+                const inputEndDate = document.getElementById('inputEndDate');
+                const inputJoinDate = document.getElementById('inputJoinDate');
+                const jenisKontrak = e.target.value;
+
+                if (jenisKontrak === 'Kontrak' || jenisKontrak === 'Probation') {
+                    if (endDateContainer) endDateContainer.style.display = 'grid';
+                    if (inputEndDate) {
+                        inputEndDate.required = true;
+                        if (inputJoinDate && inputJoinDate.value) {
+                            inputEndDate.min = inputJoinDate.value;
+                        }
+                    }
+                } else {
+                    if (endDateContainer) endDateContainer.style.display = 'none';
+                    if (inputEndDate) {
+                        inputEndDate.required = false;
+                        inputEndDate.value = '';
+                        inputEndDate.removeAttribute('min');
+                    }
+                }
+            }
+
+            // Validasi agar End Date tidak lebih awal dari Join Date
+            if (e.target.id === 'inputJoinDate') {
+                const inputEndDate = document.getElementById('inputEndDate');
+                if (inputEndDate && e.target.value) {
+                    inputEndDate.min = e.target.value;
+                    if (inputEndDate.value && inputEndDate.value < e.target.value) {
+                        inputEndDate.value = '';
+                    }
+                }
+            }
+        });
+
+        // Validasi Submit Form Tambah Karyawan
+        document.addEventListener('submit', function(e) {
+            if (e.target && e.target.id === 'formAddEmployee') {
+                e.preventDefault();
+                const inputNik = document.getElementById('inputNik');
+                const inputTelp = document.getElementById('inputTelp');
+                const inputDaruratTelp = document.getElementById('inputDaruratTelp');
+                const inputJenisKontrak = document.getElementById('inputJenisKontrak');
+                const inputEndDate = document.getElementById('inputEndDate');
+                const inputJoinDate = document.getElementById('inputJoinDate');
+                const inputIpk = document.getElementById('inputIpk');
+
+                if (inputNik && inputNik.value.length !== 16) {
+                    alert('NIK wajib diisi tepat 16 digit angka.');
+                    inputNik.focus();
+                    return;
+                }
+
+                if (inputTelp && (inputTelp.value.length < 10 || inputTelp.value.length > 13)) {
+                    alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
+                    inputTelp.focus();
+                    return;
+                }
+
+                if (inputDaruratTelp && (inputDaruratTelp.value.length < 10 || inputDaruratTelp.value.length > 13)) {
+                    alert('Nomor Telepon Kontak Darurat wajib diisi antara 10 hingga 13 digit.');
+                    inputDaruratTelp.focus();
+                    return;
+                }
+
+                if (inputJenisKontrak && (inputJenisKontrak.value === 'Kontrak' || inputJenisKontrak.value === 'Probation')) {
+                    if (inputEndDate && !inputEndDate.value) {
+                        alert('Tanggal Berakhir (End Date) wajib diisi untuk jenis kontrak Kontrak atau Probation.');
+                        inputEndDate.focus();
+                        return;
+                    }
+
+                    if (inputJoinDate && inputEndDate && inputJoinDate.value && inputEndDate.value < inputJoinDate.value) {
+                        alert('Tanggal Berakhir (End Date) tidak boleh lebih awal dari Tanggal Bergabung (Join Date).');
+                        inputEndDate.focus();
+                        return;
+                    }
+                }
+
+                if (inputIpk && inputIpk.value !== '') {
+                    const ipk = parseFloat(inputIpk.value);
+                    if (isNaN(ipk) || ipk < 0 || ipk > 4) {
+                        alert('IPK wajib diisi dengan nilai antara 0.00 hingga 4.00.');
+                        inputIpk.focus();
+                        return;
+                    }
+                }
+
+                const emailInputs = e.target.querySelectorAll('input[type="email"]');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+                for (let input of emailInputs) {
+                    if (!emailRegex.test(input.value)) {
+                        alert('Format email yang Anda masukkan tidak valid (contoh: nama@domain.com).');
+                        input.focus();
+                        return;
+                    }
+                }
+
+                alert('Simpan data karyawan berhasil!');
+                loadModule('employees');
+            }
+        });
     </script>
 </body>
 </html>
