@@ -51,8 +51,7 @@
                 </div>
             </header>
 
-            <div class="dashboard-body" id="moduleView">
-                </div>
+            <div class="dashboard-body" id="moduleView"></div>
         </main>
     </div>
 
@@ -79,15 +78,12 @@
                     <label style="color: var(--gray-text);"><input type="checkbox" checked style="margin-right: 6px;"> Remember Me</label>
                     <a href="#" onclick="alert('Fitur reset password simulasi.')" style="color: var(--primary); text-decoration: none; font-weight: 500;">Forgot Password?</a>
                 </div>
-                <button type="submit" class="btn-primary">Sign In to Dashboardzzz</button>
+                <button type="submit" class="btn-primary">Sign In to Dashboard</button>
             </form>
         </div>
     </div>
 
     <script>
-        // ==========================================
-        // INISIALISASI SUPABASE KLIEN (DENGAN SAFEGUARD)
-        // ==========================================
         let supabase = null;
         try {
             const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co';
@@ -99,7 +95,6 @@
             console.error('Inisialisasi Supabase gagal:', err);
         }
 
-        // Cek status sesi login dan modul terakhir menggunakan sessionStorage
         window.addEventListener('DOMContentLoaded', () => {
             if (sessionStorage.getItem('isLoggedIn') === 'true') {
                 document.getElementById('authContainer').style.display = 'none';
@@ -118,19 +113,23 @@
             }
         });
 
-        // Fungsi memuat modul secara asinkron
         async function loadModule(moduleName) {
             const view = document.getElementById('moduleView');
             try {
                 const response = await fetch(`modules/${moduleName}.html`);
                 if (!response.ok) throw new Error('Modul tidak ditemukan');
                 view.innerHTML = await response.text();
+
+                if (moduleName === 'organization') {
+                    fetchDepartmentsFromSupabase();
+                } else if (moduleName === 'organization-add') {
+                    initOrganizationAdd();
+                }
             } catch (error) {
                 view.innerHTML = `<div class="card"><h3>Gagal memuat modul</h3><p>${error.message}</p></div>`;
             }
         }
 
-        // Navigasi Sidebar (Simpan modul aktif ke sessionStorage)
         document.addEventListener('click', function(e) {
             const sidebarItem = e.target.closest('.sidebar-menu li');
             if (sidebarItem) {
@@ -144,7 +143,6 @@
             }
         });
 
-        // Fungsi Tombol Login (Simpan status & modul ke sessionStorage)
         function handleLogin(e) {
             e.preventDefault();
             sessionStorage.setItem('isLoggedIn', 'true');
@@ -154,7 +152,6 @@
             loadModule('dashboard');
         }
 
-        // Fungsi Tombol Logout (Hapus sesi dari sessionStorage)
         document.addEventListener('click', function(e) {
             if (e.target && (e.target.id === 'btnLogout' || e.target.closest('#btnLogout'))) {
                 sessionStorage.removeItem('isLoggedIn');
@@ -164,7 +161,6 @@
             }
         });
 
-        // Fitur Show/Hide Password Interactivity
         document.addEventListener('click', function(e) {
             const toggleBtn = e.target.closest('#togglePassword');
             if (toggleBtn) {
@@ -178,30 +174,17 @@
             }
         });
 
-        // ==========================================
-        // GLOBAL EVENT DELEGATION UNTUK FORM KARYAWAN
-        // ==========================================
-
-        // Validasi Input Real-time (Angka / Huruf)
         document.addEventListener('input', function(e) {
             if (!e.target) return;
-
-            // NIK, No Telepon Utama, & No Telepon Darurat (Hanya Angka)
             if (e.target.id === 'inputNik' || e.target.id === 'inputTelp' || e.target.id === 'inputDaruratTelp') {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             }
-
-            // Nama Kontak Darurat (Hanya Huruf)
             if (e.target.id === 'inputDaruratNama') {
                 e.target.value = e.target.value.replace(/[0-9]/g, '');
             }
-
-            // Tahun Masuk Akademik
             if (e.target.id === 'inputTahunMasuk') {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
             }
-
-            // IPK (0 - 4.00)
             if (e.target.id === 'inputIpk') {
                 let val = parseFloat(e.target.value);
                 if (val > 4) e.target.value = '4';
@@ -209,11 +192,8 @@
             }
         });
 
-        // Kontrol Dinamis End Date & Join Date
         document.addEventListener('change', function(e) {
             if (!e.target) return;
-
-            // Munculkan End Date jika Kontrak / Probation dipilih
             if (e.target.id === 'inputJenisKontrak') {
                 const endDateContainer = document.getElementById('endDateContainer');
                 const inputEndDate = document.getElementById('inputEndDate');
@@ -238,7 +218,6 @@
                 }
             }
 
-            // Validasi agar End Date tidak lebih awal dari Join Date
             if (e.target.id === 'inputJoinDate') {
                 const inputEndDate = document.getElementById('inputEndDate');
                 if (inputEndDate && e.target.value) {
@@ -250,7 +229,6 @@
             }
         });
 
-        // Validasi Submit Form Tambah Karyawan
         document.addEventListener('submit', function(e) {
             if (e.target && e.target.id === 'formAddEmployee') {
                 e.preventDefault();
@@ -303,21 +281,120 @@
                     }
                 }
 
-                const emailInputs = e.target.querySelectorAll('input[type="email"]');
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-                for (let input of emailInputs) {
-                    if (!emailRegex.test(input.value)) {
-                        alert('Format email yang Anda masukkan tidak valid (contoh: nama@domain.com).');
-                        input.focus();
-                        return;
-                    }
-                }
-
                 alert('Simpan data karyawan berhasil!');
                 loadModule('employees');
             }
         });
+
+        async function fetchDepartmentsFromSupabase() {
+            const tbody = document.getElementById('departmentTableBody');
+            if (!tbody) return;
+
+            if (!supabase) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Klien Supabase belum terinisialisasi.</td></tr>`;
+                return;
+            }
+
+            const { data, error } = await supabase
+                .from('departments')
+                .select('*')
+                .order('id', { ascending: true });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data departemen. Silakan tambahkan baru.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(dept => {
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px; font-weight: 600; color: #1e293b;">${dept.kode}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${dept.nama}</td>
+                        <td style="padding: 14px 20px; color: #64748b;">${dept.hod || '-'}</td>
+                        <td style="padding: 14px 20px;">
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: ${dept.status === 'Aktif' ? '#dcfce7; color: #15803d;' : '#f1f5f9; color: #475569;'}">${dept.status}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function initOrganizationAdd() {
+            const inputKodeDept = document.getElementById('inputKodeDept');
+            if (!inputKodeDept) return;
+
+            let generatedCode = 'DEP-001';
+            if (supabase) {
+                const { data } = await supabase
+                    .from('departments')
+                    .select('kode')
+                    .order('id', { ascending: false })
+                    .limit(1);
+
+                let nextNumber = 1;
+                if (data && data.length > 0) {
+                    let lastCode = data[0].kode;
+                    let parts = lastCode.split('-');
+                    let num = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+                    if (!isNaN(num)) nextNumber = num + 1;
+                }
+                generatedCode = 'DEP-' + String(nextNumber).padStart(3, '0');
+            }
+            inputKodeDept.value = generatedCode;
+
+            const formAddDept = document.getElementById('formAddDepartment');
+            if (formAddDept) {
+                formAddDept.onsubmit = async function(e) {
+                    e.preventDefault();
+
+                    const namaVal = document.getElementById('inputNamaDept').value.trim();
+                    const hodVal = document.getElementById('inputHodDept').value.trim();
+                    const statusVal = document.getElementById('inputStatusDept').value;
+
+                    if (!namaVal) {
+                        alert('Nama departemen wajib diisi.');
+                        document.getElementById('inputNamaDept').focus();
+                        return;
+                    }
+
+                    const { data: checkExisting } = await supabase
+                        .from('departments')
+                        .select('kode')
+                        .eq('kode', generatedCode);
+
+                    if (checkExisting && checkExisting.length > 0) {
+                        alert('Peringatan: Kode departemen ' + generatedCode + ' baru saja digunakan oleh transaksi lain. Sistem akan memuat ulang.');
+                        loadModule('organization');
+                        return;
+                    }
+
+                    const { error: insertError } = await supabase
+                        .from('departments')
+                        .insert([
+                            { kode: generatedCode, nama: namaVal, hod: hodVal || null, status: statusVal }
+                        ]);
+
+                    if (insertError) {
+                        if (insertError.code === '23505') {
+                            alert('Peringatan: Kode departemen ' + generatedCode + ' sudah tersimpan oleh transaksi lain.');
+                        } else {
+                            alert('Gagal menyimpan data: ' + insertError.message);
+                        }
+                        loadModule('organization');
+                        return;
+                    }
+
+                    alert('Departemen ' + namaVal + ' (' + generatedCode + ') berhasil disimpan!');
+                    loadModule('organization');
+                };
+            }
+        }
     </script>
 </body>
 </html>
