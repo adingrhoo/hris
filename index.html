@@ -391,7 +391,7 @@
                     let matchSearch = true;
                     if (query.length > 0) {
                         if (query.length < 3) {
-                            matchSearch = true; // Jika kurang dari 3 huruf, abaikan pencarian teks agar tabel tidak kosong mendadak
+                            matchSearch = true; 
                         } else {
                             matchSearch = name.includes(query) || nik.includes(query);
                         }
@@ -418,7 +418,7 @@
         }
 
         // ==========================================
-        // EDIT KARYAWAN (NAVIGASI & INISIALISASI FORM)
+        // EDIT KARYAWAN (NAVIGASI & INISIALISASI FORM LENGKAP)
         // ==========================================
         function editEmployee(id) {
             sessionStorage.setItem('activeEditEmployeeId', id);
@@ -450,23 +450,48 @@
                 return;
             }
 
-            // Isi form dengan data yang ada
+            // ==========================================
+            // 1. ISI FORM DENGAN SEMUA DATA LAMA DARI DATABASE
+            // ==========================================
             document.getElementById('editEmployeeId').value = empData.id || '';
             document.getElementById('editNama').value = empData.name || empData.nama || '';
             document.getElementById('editNik').value = empData.nik || '';
-            document.getElementById('editTelp').value = empData.telepon || '';
-            document.getElementById('editEmailPerusahaan').value = empData.email || '';
+            document.getElementById('editJenisKelamin').value = empData.jenis_kelamin || '';
+            document.getElementById('editTempatLahir').value = empData.tempat_lahir || '';
+            document.getElementById('editTanggalLahir').value = empData.tanggal_lahir || '';
+            document.getElementById('editAgama').value = empData.agama || '';
+            document.getElementById('editAlamat').value = empData.alamat || '';
+            document.getElementById('editTelp').value = empData.telepon || empData.no_telp || '';
+            document.getElementById('editEmailPribadi').value = empData.email_pribadi || '';
+            
+            // Kontak Darurat
+            document.getElementById('editDaruratNama').value = empData.kontak_darurat_nama || empData.darurat_nama || '';
+            document.getElementById('editDaruratHubungan').value = empData.kontak_darurat_hubungan || empData.darurat_hubungan || '';
+            document.getElementById('editDaruratTelp').value = empData.kontak_darurat_telepon || empData.darurat_telp || '';
+
+            // Informasi Pekerjaan & Status
             document.getElementById('editJenisKontrak').value = empData.jenis_kontrak || '';
             document.getElementById('editJoinDate').value = empData.join_date || '';
             document.getElementById('editStatus').value = empData.status || 'Aktif';
             document.getElementById('editDivisi').value = empData.department || empData.divisi || '';
             document.getElementById('editAtasan').value = empData.atasan || '';
             document.getElementById('editLokasi').value = empData.lokasi || '';
+            document.getElementById('editEmailPerusahaan').value = empData.email || empData.email_perusahaan || '';
+
+            // Informasi Akademik
             document.getElementById('editPendidikanTerakhir').value = empData.pendidikan_terakhir || '';
             document.getElementById('editTahunMasuk').value = empData.tahun_masuk || '';
             document.getElementById('editUniversitas').value = empData.universitas || '';
             document.getElementById('editJurusan').value = empData.jurusan || '';
             document.getElementById('editIpk').value = empData.ipk !== null && empData.ipk !== undefined ? empData.ipk : '';
+
+            // Informasi Administratif & Payroll
+            document.getElementById('editBankNama').value = empData.bank_nama || '';
+            document.getElementById('editBankNo').value = empData.bank_no || '';
+            document.getElementById('editBankPemilik').value = empData.bank_pemilik || '';
+            document.getElementById('editBpjs').value = empData.bpjs || '';
+            document.getElementById('editNpwp').value = empData.npwp || '';
+            document.getElementById('editPtkp').value = empData.ptkp || '';
 
             // Handle visibilitas End Date jika Kontrak/Probation
             const editEndDateContainer = document.getElementById('editEndDateContainer');
@@ -479,7 +504,9 @@
                 }
             }
 
-            // Handle Submit Update Form Edit
+            // ==========================================
+            // 2. HANDLE SUBMIT UPDATE KE SUPABASE
+            // ==========================================
             const formEdit = document.getElementById('formEditEmployee');
             if (formEdit) {
                 formEdit.onsubmit = async function(e) {
@@ -488,15 +515,40 @@
                     const updatedData = {
                         name: document.getElementById('editNama').value.trim(),
                         nik: document.getElementById('editNik').value.trim(),
+                        jenis_kelamin: document.getElementById('editJenisKelamin').value,
+                        tempat_lahir: document.getElementById('editTempatLahir').value.trim(),
+                        tanggal_lahir: document.getElementById('editTanggalLahir').value || null,
+                        agama: document.getElementById('editAgama').value,
+                        alamat: document.getElementById('editAlamat').value.trim(),
                         telepon: document.getElementById('editTelp').value.trim(),
-                        email: document.getElementById('editEmailPerusahaan').value.trim(),
+                        email_pribadi: document.getElementById('editEmailPribadi').value.trim(),
+                        
+                        kontak_darurat_nama: document.getElementById('editDaruratNama').value.trim(),
+                        kontak_darurat_hubungan: document.getElementById('editDaruratHubungan').value,
+                        kontak_darurat_telepon: document.getElementById('editDaruratTelp').value.trim(),
+
                         jenis_kontrak: document.getElementById('editJenisKontrak').value,
                         join_date: document.getElementById('editJoinDate').value || null,
                         end_date: document.getElementById('editEndDate').value || null,
                         status: document.getElementById('editStatus').value,
                         department: document.getElementById('editDivisi').value,
+                        atasan: document.getElementById('editAtasan').value.trim(),
+                        lokasi: document.getElementById('editLokasi').value.trim(),
+                        email: document.getElementById('editEmailPerusahaan').value.trim(),
+
+                        pendidikan_terakhir: document.getElementById('editPendidikanTerakhir').value,
+                        tahun_masuk: document.getElementById('editTahunMasuk').value ? parseInt(document.getElementById('editTahunMasuk').value) : null,
+                        universitas: document.getElementById('editUniversitas').value.trim(),
+                        jurusan: document.getElementById('editJurusan').value.trim(),
+                        ipk: document.getElementById('editIpk').value !== '' ? parseFloat(document.getElementById('editIpk').value) : null,
                         position: document.getElementById('editJurusan').value ? document.getElementById('editJurusan').value + ' Graduate' : 'Staff',
-                        ipk: document.getElementById('editIpk').value !== '' ? parseFloat(document.getElementById('editIpk').value) : null
+
+                        bank_nama: document.getElementById('editBankNama').value.trim(),
+                        bank_no: document.getElementById('editBankNo').value.trim(),
+                        bank_pemilik: document.getElementById('editBankPemilik').value.trim(),
+                        bpjs: document.getElementById('editBpjs').value.trim(),
+                        npwp: document.getElementById('editNpwp').value.trim(),
+                        ptkp: document.getElementById('editPtkp').value
                     };
 
                     if (!dbClient) {
