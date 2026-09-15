@@ -11,6 +11,7 @@
 </head>
 <body>
 
+    <!-- APLIKASI UTAMA (DITAMPILKAN SETELAH LOGIN) -->
     <div class="app-container" id="appContainer" style="display: none;">
         <aside class="sidebar">
             <div class="sidebar-brand">
@@ -55,6 +56,7 @@
         </main>
     </div>
 
+    <!-- HALAMAN LOGIN -->
     <div id="authContainer" class="auth-wrapper">
         <div class="auth-card">
             <div style="text-align: center; margin-bottom: 28px;">
@@ -83,9 +85,10 @@
         </div>
     </div>
 
+    <!-- SKRIP UTAMA APLIKASI -->
     <script>
         // ==========================================
-        // INISIALISASI KLIEN DATABASE & GLOBAL CACHE
+        // 1. INISIALISASI SUPABASE & GLOBAL CACHE
         // ==========================================
         let dbClient = null;
         let allEmployeesCache = [];
@@ -118,6 +121,9 @@
             }
         });
 
+        // ==========================================
+        // 2. MODUL LOADER & NAVIGASI SIDEBAR
+        // ==========================================
         async function loadModule(moduleName) {
             const view = document.getElementById('moduleView');
             try {
@@ -187,6 +193,9 @@
             }
         });
 
+        // ==========================================
+        // 3. VALIDASI INPUT OTOMATIS & FORMAT
+        // ==========================================
         document.addEventListener('input', function(e) {
             if (!e.target) return;
             if (e.target.id === 'inputNik' || e.target.id === 'editNik' || e.target.id === 'inputTelp' || e.target.id === 'editTelp' || e.target.id === 'inputDaruratTelp' || e.target.id === 'editDaruratTelp') {
@@ -227,7 +236,7 @@
         });
 
         // ==========================================
-        // HELPER WARNA BADGE STATUS
+        // 4. HELPER WARNA BADGE STATUS
         // ==========================================
         function getStatusBadgeStyle(status) {
             switch(status) {
@@ -245,7 +254,7 @@
         }
 
         // ==========================================
-        // INTEGRASI FORM TAMBAH KARYAWAN KE SUPABASE
+        // 5. TAMBAH KARYAWAN BARU (DENGAN AUTO-GENERATE EMPLOYEE_ID)
         // ==========================================
         document.addEventListener('submit', async function(e) {
             if (e.target && e.target.id === 'formAddEmployee') {
@@ -268,21 +277,32 @@
                     return;
                 }
 
-                if (inputTelp && (inputTelp.value.length < 10 || inputTelp.value.length > 13)) {
-                    alert('Nomor Telepon / WhatsApp wajib diisi antara 10 hingga 13 digit.');
-                    inputTelp.focus();
-                    return;
-                }
-
                 if (!dbClient) {
                     alert('Klien database belum terinisialisasi.');
                     return;
+                }
+
+                // Auto-generate employee_id (EMP-XXXX)
+                let generatedEmpId = 'EMP-0001';
+                const { data: lastEmp } = await dbClient
+                    .from('employees')
+                    .select('employee_id')
+                    .order('employee_id', { ascending: false })
+                    .limit(1);
+
+                if (lastEmp && lastEmp.length > 0 && lastEmp[0].employee_id) {
+                    let parts = lastEmp[0].employee_id.split('-');
+                    if (parts.length > 1) {
+                        let nextNumber = parseInt(parts[1], 10) + 1;
+                        generatedEmpId = 'EMP-' + String(nextNumber).padStart(4, '0');
+                    }
                 }
 
                 const { error: insertError } = await dbClient
                     .from('employees')
                     .insert([
                         {
+                            employee_id: generatedEmpId,
                             nik: inputNik ? inputNik.value.trim() : null,
                             name: inputNama ? inputNama.value.trim() : null,
                             email: inputEmailPerusahaan ? inputEmailPerusahaan.value.trim() : null,
@@ -303,13 +323,13 @@
                     return;
                 }
 
-                alert('Simpan data karyawan ke database berhasil!');
+                alert(`Karyawan baru berhasil ditambahkan dengan ID: ${generatedEmpId}`);
                 loadModule('employees');
             }
         });
 
         // ==========================================
-        // FETCH & RENDER KARYAWAN (DENGAN PENCARIAN MIN 3 HURUF & FILTER)
+        // 6. CORE HR: FETCH & PENCARIAN KARYAWAN
         // ==========================================
         async function fetchEmployeesFromSupabase() {
             const tbody = document.getElementById('employeeTableBody');
@@ -322,18 +342,10 @@
                     .order('id', { ascending: true });
 
                 if (error) throw error;
-
-                if (data && data.length > 0) {
-                    allEmployeesCache = data;
-                    localStorage.setItem('cache_employees', JSON.stringify(data));
-                } else {
-                    const cached = localStorage.getItem('cache_employees');
-                    allEmployeesCache = cached ? JSON.parse(cached) : [];
-                }
+                allEmployeesCache = data || [];
             } catch (err) {
-                console.warn('Menggunakan cache lokal karena kendala koneksi:', err.message);
-                const cached = localStorage.getItem('cache_employees');
-                allEmployeesCache = cached ? JSON.parse(cached) : [];
+                console.warn('Gagal memuat dari Supabase:', err.message);
+                allEmployeesCache = [];
             }
 
             renderEmployeeTable(allEmployeesCache);
@@ -345,22 +357,26 @@
             if (!tbody) return;
 
             if (!dataList || dataList.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan yang ditemukan.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan.</td></tr>`;
                 return;
             }
 
             tbody.innerHTML = '';
             dataList.forEach(emp => {
-                const empName = emp.name || emp.nama || '-';
+                const empId = emp.employee_id || '-';
+                const empName = emp.name || '-';
                 const empNik = emp.nik || '-';
-                const empDept = emp.department || emp.divisi || '-';
-                const empPos = emp.position || emp.jabatan || '-';
+                const empDept = emp.department || '-';
+                const empPos = emp.position || '-';
                 const empStatus = emp.status || 'Aktif';
 
                 tbody.innerHTML += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 14px 20px; font-weight: 600; color: #1e293b;">${empNik}</td>
-                        <td style="padding: 14px 20px; color: #334155;">${empName}</td>
+                        <td style="padding: 14px 20px; font-weight: 600; color: #0369a1;">${empId}</td>
+                        <td style="padding: 14px 20px; color: #334155;">
+                            <div style="font-weight: 600; color: #1e293b;">${empName}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">NIK: ${empNik}</div>
+                        </td>
                         <td style="padding: 14px 20px; color: #64748b;">${empDept}</td>
                         <td style="padding: 14px 20px; color: #64748b;">${empPos}</td>
                         <td style="padding: 14px 20px;">
@@ -385,16 +401,15 @@
                 const selectedStatus = filterSelect ? filterSelect.value : '';
 
                 let filtered = allEmployeesCache.filter(emp => {
-                    const name = (emp.name || emp.nama || '').toLowerCase();
+                    const name = (emp.name || '').toLowerCase();
                     const nik = (emp.nik || '').toLowerCase();
+                    const empId = (emp.employee_id || '').toLowerCase();
                     const status = emp.status || 'Aktif';
 
                     let matchSearch = true;
                     if (query.length > 0) {
-                        if (query.length < 3) {
-                            matchSearch = true; 
-                        } else {
-                            matchSearch = name.includes(query) || nik.includes(query);
+                        if (query.length >= 3) {
+                            matchSearch = name.includes(query) || nik.includes(query) || empId.includes(query);
                         }
                     }
 
@@ -409,16 +424,12 @@
                 renderEmployeeTable(filtered);
             };
 
-            if (searchInput) {
-                searchInput.addEventListener('input', applyFilterAndSearch);
-            }
-            if (filterSelect) {
-                filterSelect.addEventListener('change', applyFilterAndSearch);
-            }
+            if (searchInput) searchInput.addEventListener('input', applyFilterAndSearch);
+            if (filterSelect) filterSelect.addEventListener('change', applyFilterAndSearch);
         }
 
         // ==========================================
-        // EDIT KARYAWAN (NAVIGASI & INISIALISASI FORM LENGKAP)
+        // 7. EDIT KARYAWAN
         // ==========================================
         function editEmployee(id) {
             sessionStorage.setItem('activeEditEmployeeId', id);
@@ -428,18 +439,13 @@
         async function initEmployeeEdit() {
             const editId = sessionStorage.getItem('activeEditEmployeeId');
             if (!editId) {
-                alert('ID Karyawan tidak valid.');
                 loadModule('employees');
                 return;
             }
 
             let empData = allEmployeesCache.find(e => String(e.id) === String(editId));
             if (!empData && dbClient) {
-                const { data, error } = await dbClient
-                    .from('employees')
-                    .select('*')
-                    .eq('id', editId)
-                    .single();
+                const { data, error } = await dbClient.from('employees').select('*').eq('id', editId).single();
                 if (!error && data) empData = data;
             }
 
@@ -450,33 +456,33 @@
             }
 
             document.getElementById('editEmployeeId').value = empData.id || '';
-            document.getElementById('editNama').value = empData.name || empData.nama || '';
+            document.getElementById('editNama').value = empData.name || '';
             document.getElementById('editNik').value = empData.nik || '';
             document.getElementById('editJenisKelamin').value = empData.jenis_kelamin || '';
             document.getElementById('editTempatLahir').value = empData.tempat_lahir || '';
             document.getElementById('editTanggalLahir').value = empData.tanggal_lahir || '';
             document.getElementById('editAgama').value = empData.agama || '';
             document.getElementById('editAlamat').value = empData.alamat || '';
-            document.getElementById('editTelp').value = empData.telepon || empData.no_telp || '';
+            document.getElementById('editTelp').value = empData.telepon || '';
             document.getElementById('editEmailPribadi').value = empData.email_pribadi || '';
             
-            document.getElementById('editDaruratNama').value = empData.kontak_darurat_nama || empData.darurat_nama || '';
-            document.getElementById('editDaruratHubungan').value = empData.kontak_darurat_hubungan || empData.darurat_hubungan || '';
-            document.getElementById('editDaruratTelp').value = empData.kontak_darurat_telepon || empData.darurat_telp || '';
+            document.getElementById('editDaruratNama').value = empData.kontak_darurat_nama || '';
+            document.getElementById('editDaruratHubungan').value = empData.kontak_darurat_hubungan || '';
+            document.getElementById('editDaruratTelp').value = empData.kontak_darurat_telepon || '';
 
             document.getElementById('editJenisKontrak').value = empData.jenis_kontrak || '';
             document.getElementById('editJoinDate').value = empData.join_date || '';
             document.getElementById('editStatus').value = empData.status || 'Aktif';
-            document.getElementById('editDivisi').value = empData.department || empData.divisi || '';
+            document.getElementById('editDivisi').value = empData.department || '';
             document.getElementById('editAtasan').value = empData.atasan || '';
             document.getElementById('editLokasi').value = empData.lokasi || '';
-            document.getElementById('editEmailPerusahaan').value = empData.email || empData.email_perusahaan || '';
+            document.getElementById('editEmailPerusahaan').value = empData.email || '';
 
             document.getElementById('editPendidikanTerakhir').value = empData.pendidikan_terakhir || '';
             document.getElementById('editTahunMasuk').value = empData.tahun_masuk || '';
             document.getElementById('editUniversitas').value = empData.universitas || '';
             document.getElementById('editJurusan').value = empData.jurusan || '';
-            document.getElementById('editIpk').value = empData.ipk !== null && empData.ipk !== undefined ? empData.ipk : '';
+            document.getElementById('editIpk').value = empData.ipk ?? '';
 
             document.getElementById('editBankNama').value = empData.bank_nama || '';
             document.getElementById('editBankNo').value = empData.bank_no || '';
@@ -539,22 +545,13 @@
                         ptkp: document.getElementById('editPtkp').value
                     };
 
-                    if (!dbClient) {
-                        alert('Klien database belum terinisialisasi.');
-                        return;
-                    }
-
-                    const { error: updateError } = await dbClient
-                        .from('employees')
-                        .update(updatedData)
-                        .eq('id', editId);
-
+                    const { error: updateError } = await dbClient.from('employees').update(updatedData).eq('id', editId);
                     if (updateError) {
-                        alert('Gagal memperbarui data karyawan: ' + updateError.message);
+                        alert('Gagal memperbarui data: ' + updateError.message);
                         return;
                     }
 
-                    alert('Perubahan data karyawan berhasil disimpan ke database!');
+                    alert('Perubahan data karyawan berhasil disimpan!');
                     sessionStorage.removeItem('activeEditEmployeeId');
                     loadModule('employees');
                 };
@@ -562,7 +559,7 @@
         }
 
         // ==========================================
-        // MODUL KEHADIRAN (ATTENDANCE) & HR OVERRIDE
+        // 8. MODUL KEHADIRAN (ATTENDANCE) & HR OVERRIDE
         // ==========================================
         async function initAttendanceModule() {
             const dateInput = document.getElementById('filterAttendanceDate');
@@ -570,9 +567,7 @@
 
             if (dateInput && !dateInput.dataset.listener) {
                 dateInput.dataset.listener = 'true';
-                dateInput.addEventListener('change', () => {
-                    initAttendanceModule();
-                });
+                dateInput.addEventListener('change', () => initAttendanceModule());
             }
 
             const tbody = document.getElementById('attendanceTableBody');
@@ -589,20 +584,18 @@
                 .from('attendance')
                 .select(`
                     id,
-                    nik,
+                    employee_id,
                     date,
                     clock_in,
                     clock_out,
                     status,
-                    late_reason,
                     overtime_hours,
                     notes,
-                    employees (name, department, position)
+                    employees (nik, name, department, position)
                 `)
                 .eq('date', selectedDate);
 
             if (error) {
-                console.error('Gagal memuat absensi:', error.message);
                 tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
                 return;
             }
@@ -615,8 +608,10 @@
             tbody.innerHTML = '';
             data.forEach(item => {
                 const emp = item.employees || {};
-                const name = emp.name || emp.nama || 'Tidak Diketahui';
-                const dept = emp.department || emp.divisi || '-';
+                const name = emp.name || 'Tidak Diketahui';
+                const dept = emp.department || '-';
+                const userNik = emp.nik || '-';
+                const empIdBadge = item.employee_id || '-';
                 
                 let badgeStyle = 'background: #f1f5f9; color: #475569;';
                 if (item.status === 'Hadir') badgeStyle = 'background: #dcfce7; color: #15803d;';
@@ -628,8 +623,8 @@
                 tbody.innerHTML += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 14px 20px;">
-                            <div style="font-weight: 600; color: #1e293b;">${name}</div>
-                            <div style="font-size: 0.75rem; color: #64748b;">${item.nik}</div>
+                            <div style="font-weight: 600; color: #1e293b;">${name} <span style="color:#0369a1; font-size:0.7rem; background:#e0f2fe; padding:2px 6px; border-radius:4px; margin-left:4px;">${empIdBadge}</span></div>
+                            <div style="font-size: 0.75rem; color: #64748b;">NIK: ${userNik}</div>
                         </td>
                         <td style="padding: 14px 20px; color: #334155;">${dept}</td>
                         <td style="padding: 14px 20px; font-family: monospace; font-size: 0.85rem; color: #334155;">${item.clock_in ? item.clock_in : '<span style="color: #94a3b8;">-</span>'}</td>
@@ -651,12 +646,7 @@
         async function openAttendanceEdit(id) {
             if (!dbClient) return;
 
-            const { data, error } = await dbClient
-                .from('attendance')
-                .select('*')
-                .eq('id', id)
-                .single();
-
+            const { data, error } = await dbClient.from('attendance').select('*').eq('id', id).single();
             if (error || !data) {
                 alert('Gagal mengambil data absensi.');
                 return;
@@ -691,94 +681,51 @@
         }
 
         // ==========================================
-        // FETCH DATA DASHBOARD
+        // 9. DASHBOARD & ORGANISASI
         // ==========================================
         async function initDashboard() {
             const statEmp = document.getElementById('statTotalEmployees');
             if (statEmp) {
                 try {
-                    const { count, error } = await dbClient
-                        .from('employees')
-                        .select('*', { count: 'exact', head: true });
-                    if (error) throw error;
-                    if (count !== null) {
-                        statEmp.textContent = count;
-                        localStorage.setItem('cache_total_emp', count);
-                    }
+                    const { count, error } = await dbClient.from('employees').select('*', { count: 'exact', head: true });
+                    if (!error && count !== null) statEmp.textContent = count;
                 } catch (e) {
-                    const cachedCount = localStorage.getItem('cache_total_emp');
-                    statEmp.textContent = cachedCount !== null ? cachedCount : '0';
+                    statEmp.textContent = '0';
                 }
             }
 
             const dashTableBody = document.getElementById('dashboardEmployeeTableBody');
             if (dashTableBody) {
-                let recentData = [];
                 try {
-                    const { data, error } = await dbClient
-                        .from('employees')
-                        .select('*')
-                        .order('id', { ascending: false })
-                        .limit(5);
-                    if (error) throw error;
+                    const { data } = await dbClient.from('employees').select('*').order('id', { ascending: false }).limit(5);
                     if (data && data.length > 0) {
-                        recentData = data;
-                        localStorage.setItem('cache_recent_employees', JSON.stringify(data));
-                    } else {
-                        const cached = localStorage.getItem('cache_recent_employees');
-                        recentData = cached ? JSON.parse(cached) : [];
+                        dashTableBody.innerHTML = '';
+                        data.forEach(emp => {
+                            dashTableBody.innerHTML += `
+                                <tr style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 12px 16px; font-weight: 600; color: #1e293b;">${emp.name || '-'}</td>
+                                    <td style="padding: 12px 16px; color: #475569;">${emp.department || '-'}</td>
+                                    <td style="padding: 12px 16px; color: #475569;">${emp.position || '-'}</td>
+                                    <td style="padding: 12px 16px;">
+                                        <span style="padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; ${getStatusBadgeStyle(emp.status)}">${emp.status || 'Aktif'}</span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
                     }
                 } catch (e) {
-                    const cached = localStorage.getItem('cache_recent_employees');
-                    recentData = cached ? JSON.parse(cached) : [];
-                }
-
-                if (recentData.length > 0) {
-                    dashTableBody.innerHTML = '';
-                    recentData.forEach(emp => {
-                        const empName = emp.name || emp.nama || '-';
-                        const empDept = emp.department || emp.divisi || '-';
-                        const empPos = emp.position || emp.jabatan || '-';
-                        const empStatus = emp.status || 'Aktif';
-
-                        dashTableBody.innerHTML += `
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 12px 16px; font-weight: 600; color: #1e293b;">${empName}</td>
-                                <td style="padding: 12px 16px; color: #475569;">${empDept}</td>
-                                <td style="padding: 12px 16px; color: #475569;">${empPos}</td>
-                                <td style="padding: 12px 16px;">
-                                    <span style="padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; ${getStatusBadgeStyle(empStatus)}">${empStatus}</span>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                } else {
-                    dashTableBody.innerHTML = `<tr><td colspan="4" style="padding: 16px; text-align: center; color: #64748b;">Belum ada data karyawan.</td></tr>`;
+                    dashTableBody.innerHTML = `<tr><td colspan="4" style="padding: 16px; text-align: center; color: #64748b;">Belum ada data.</td></tr>`;
                 }
             }
         }
 
         async function fetchDepartmentsFromSupabase() {
             const tbody = document.getElementById('departmentTableBody');
-            if (!tbody) return;
+            if (!tbody || !dbClient) return;
 
-            if (!dbClient) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Klien database belum terinisialisasi.</td></tr>`;
-                return;
-            }
-
-            const { data, error } = await dbClient
-                .from('departments')
-                .select('*')
-                .order('id', { ascending: true });
-
-            if (error) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data departemen. Silakan tambahkan baru.</td></tr>`;
+            const { data, error } = await dbClient.from('departments').select('*').order('id', { ascending: true });
+            if (error || !data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data departemen.</td></tr>`;
                 return;
             }
 
@@ -799,24 +746,14 @@
 
         async function initOrganizationAdd() {
             const inputKodeDept = document.getElementById('inputKodeDept');
-            if (!inputKodeDept) return;
+            if (!inputKodeDept || !dbClient) return;
 
             let generatedCode = 'DEP-001';
-            if (dbClient) {
-                const { data } = await dbClient
-                    .from('departments')
-                    .select('kode')
-                    .order('id', { ascending: false })
-                    .limit(1);
-
-                let nextNumber = 1;
-                if (data && data.length > 0) {
-                    let lastCode = data[0].kode;
-                    let parts = lastCode.split('-');
-                    let num = parts.length > 1 ? parseInt(parts[1], 10) : 0;
-                    if (!isNaN(num)) nextNumber = num + 1;
-                }
-                generatedCode = 'DEP-' + String(nextNumber).padStart(3, '0');
+            const { data } = await dbClient.from('departments').select('kode').order('id', { ascending: false }).limit(1);
+            if (data && data.length > 0) {
+                let parts = data[0].kode.split('-');
+                let num = parts.length > 1 ? parseInt(parts[1], 10) : 0;
+                if (!isNaN(num)) generatedCode = 'DEP-' + String(num + 1).padStart(3, '0');
             }
             inputKodeDept.value = generatedCode;
 
@@ -824,45 +761,19 @@
             if (formAddDept) {
                 formAddDept.onsubmit = async function(e) {
                     e.preventDefault();
-
                     const namaVal = document.getElementById('inputNamaDept').value.trim();
                     const hodVal = document.getElementById('inputHodDept').value.trim();
                     const statusVal = document.getElementById('inputStatusDept').value;
 
-                    if (!namaVal) {
-                        alert('Nama departemen wajib diisi.');
-                        document.getElementById('inputNamaDept').focus();
-                        return;
-                    }
+                    if (!namaVal) return alert('Nama departemen wajib diisi.');
 
-                    const { data: checkExisting } = await dbClient
-                        .from('departments')
-                        .select('kode')
-                        .eq('kode', generatedCode);
-
-                    if (checkExisting && checkExisting.length > 0) {
-                        alert('Peringatan: Kode departemen ' + generatedCode + ' baru saja digunakan oleh transaksi lain. Sistem akan memuat ulang.');
-                        loadModule('organization');
-                        return;
-                    }
-
-                    const { error: insertError } = await dbClient
-                        .from('departments')
-                        .insert([
-                            { kode: generatedCode, nama: namaVal, hod: hodVal || null, status: statusVal }
-                        ]);
-
+                    const { error: insertError } = await dbClient.from('departments').insert([{ kode: generatedCode, nama: namaVal, hod: hodVal || null, status: statusVal }]);
                     if (insertError) {
-                        if (insertError.code === '23505') {
-                            alert('Peringatan: Kode departemen ' + generatedCode + ' sudah tersimpan oleh transaksi lain.');
-                        } else {
-                            alert('Gagal menyimpan data: ' + insertError.message);
-                        }
-                        loadModule('organization');
+                        alert('Gagal menyimpan: ' + insertError.message);
                         return;
                     }
 
-                    alert('Departemen ' + namaVal + ' (' + generatedCode + ') berhasil disimpan!');
+                    alert(`Departemen ${namaVal} (${generatedCode}) berhasil disimpan!`);
                     loadModule('organization');
                 };
             }
