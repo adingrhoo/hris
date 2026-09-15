@@ -133,6 +133,8 @@
                     fetchEmployeesFromSupabase();
                 } else if (moduleName === 'employee-edit') {
                     initEmployeeEdit();
+                } else if (moduleName === 'attendance') {
+                    initAttendanceModule();
                 } else if (moduleName === 'dashboard') {
                     initDashboard();
                 }
@@ -387,7 +389,6 @@
                     const nik = (emp.nik || '').toLowerCase();
                     const status = emp.status || 'Aktif';
 
-                    // Aturan pencarian: Minimal 3 huruf atau kosong
                     let matchSearch = true;
                     if (query.length > 0) {
                         if (query.length < 3) {
@@ -397,7 +398,6 @@
                         }
                     }
 
-                    // Filter Status
                     let matchStatus = true;
                     if (selectedStatus !== '') {
                         matchStatus = (status === selectedStatus);
@@ -433,7 +433,6 @@
                 return;
             }
 
-            // Cari data dari cache atau ambil dari Supabase
             let empData = allEmployeesCache.find(e => String(e.id) === String(editId));
             if (!empData && dbClient) {
                 const { data, error } = await dbClient
@@ -450,9 +449,6 @@
                 return;
             }
 
-            // ==========================================
-            // 1. ISI FORM DENGAN SEMUA DATA LAMA DARI DATABASE
-            // ==========================================
             document.getElementById('editEmployeeId').value = empData.id || '';
             document.getElementById('editNama').value = empData.name || empData.nama || '';
             document.getElementById('editNik').value = empData.nik || '';
@@ -464,12 +460,10 @@
             document.getElementById('editTelp').value = empData.telepon || empData.no_telp || '';
             document.getElementById('editEmailPribadi').value = empData.email_pribadi || '';
             
-            // Kontak Darurat
             document.getElementById('editDaruratNama').value = empData.kontak_darurat_nama || empData.darurat_nama || '';
             document.getElementById('editDaruratHubungan').value = empData.kontak_darurat_hubungan || empData.darurat_hubungan || '';
             document.getElementById('editDaruratTelp').value = empData.kontak_darurat_telepon || empData.darurat_telp || '';
 
-            // Informasi Pekerjaan & Status
             document.getElementById('editJenisKontrak').value = empData.jenis_kontrak || '';
             document.getElementById('editJoinDate').value = empData.join_date || '';
             document.getElementById('editStatus').value = empData.status || 'Aktif';
@@ -478,14 +472,12 @@
             document.getElementById('editLokasi').value = empData.lokasi || '';
             document.getElementById('editEmailPerusahaan').value = empData.email || empData.email_perusahaan || '';
 
-            // Informasi Akademik
             document.getElementById('editPendidikanTerakhir').value = empData.pendidikan_terakhir || '';
             document.getElementById('editTahunMasuk').value = empData.tahun_masuk || '';
             document.getElementById('editUniversitas').value = empData.universitas || '';
             document.getElementById('editJurusan').value = empData.jurusan || '';
             document.getElementById('editIpk').value = empData.ipk !== null && empData.ipk !== undefined ? empData.ipk : '';
 
-            // Informasi Administratif & Payroll
             document.getElementById('editBankNama').value = empData.bank_nama || '';
             document.getElementById('editBankNo').value = empData.bank_no || '';
             document.getElementById('editBankPemilik').value = empData.bank_pemilik || '';
@@ -493,7 +485,6 @@
             document.getElementById('editNpwp').value = empData.npwp || '';
             document.getElementById('editPtkp').value = empData.ptkp || '';
 
-            // Handle visibilitas End Date jika Kontrak/Probation
             const editEndDateContainer = document.getElementById('editEndDateContainer');
             const editEndDate = document.getElementById('editEndDate');
             if (empData.jenis_kontrak === 'Kontrak' || empData.jenis_kontrak === 'Probation') {
@@ -504,9 +495,6 @@
                 }
             }
 
-            // ==========================================
-            // 2. HANDLE SUBMIT UPDATE KE SUPABASE
-            // ==========================================
             const formEdit = document.getElementById('formEditEmployee');
             if (formEdit) {
                 formEdit.onsubmit = async function(e) {
@@ -571,6 +559,135 @@
                     loadModule('employees');
                 };
             }
+        }
+
+        // ==========================================
+        // MODUL KEHADIRAN (ATTENDANCE) & HR OVERRIDE
+        // ==========================================
+        async function initAttendanceModule() {
+            const dateInput = document.getElementById('filterAttendanceDate');
+            const selectedDate = dateInput ? dateInput.value : '2026-09-15';
+
+            if (dateInput && !dateInput.dataset.listener) {
+                dateInput.dataset.listener = 'true';
+                dateInput.addEventListener('change', () => {
+                    initAttendanceModule();
+                });
+            }
+
+            const tbody = document.getElementById('attendanceTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748b;">Memuat data kehadiran...</td></tr>`;
+
+            if (!dbClient) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #ef4444;">Klien database belum terinisialisasi.</td></tr>`;
+                return;
+            }
+
+            const { data, error } = await dbClient
+                .from('attendance')
+                .select(`
+                    id,
+                    nik,
+                    date,
+                    clock_in,
+                    clock_out,
+                    status,
+                    late_reason,
+                    overtime_hours,
+                    notes,
+                    employees (name, department, position)
+                `)
+                .eq('date', selectedDate);
+
+            if (error) {
+                console.error('Gagal memuat absensi:', error.message);
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748b;">Tidak ada catatan kehadiran untuk tanggal ${selectedDate}.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const emp = item.employees || {};
+                const name = emp.name || emp.nama || 'Tidak Diketahui';
+                const dept = emp.department || emp.divisi || '-';
+                
+                let badgeStyle = 'background: #f1f5f9; color: #475569;';
+                if (item.status === 'Hadir') badgeStyle = 'background: #dcfce7; color: #15803d;';
+                else if (item.status === 'Terlambat') badgeStyle = 'background: #fef3c7; color: #b45309;';
+                else if (item.status === 'Cuti') badgeStyle = 'background: #e0f2fe; color: #0369a1;';
+                else if (item.status === 'Izin') badgeStyle = 'background: #f3e8ff; color: #7e22ce;';
+                else if (item.status === 'Alpha') badgeStyle = 'background: #fee2e2; color: #991b1b;';
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px;">
+                            <div style="font-weight: 600; color: #1e293b;">${name}</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">${item.nik}</div>
+                        </td>
+                        <td style="padding: 14px 20px; color: #334155;">${dept}</td>
+                        <td style="padding: 14px 20px; font-family: monospace; font-size: 0.85rem; color: #334155;">${item.clock_in ? item.clock_in : '<span style="color: #94a3b8;">-</span>'}</td>
+                        <td style="padding: 14px 20px; font-family: monospace; font-size: 0.85rem; color: #334155;">${item.clock_out ? item.clock_out : '<span style="color: #94a3b8;">-</span>'}</td>
+                        <td style="padding: 14px 20px;">
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; ${badgeStyle}">${item.status}</span>
+                        </td>
+                        <td style="padding: 14px 20px; font-family: monospace; font-size: 0.85rem; color: #334155;">${item.overtime_hours > 0 ? item.overtime_hours + ' Jam' : '-'}</td>
+                        <td style="padding: 14px 20px; text-align: center;">
+                            <button onclick="openAttendanceEdit('${item.id}')" style="padding: 6px 12px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;" title="Koreksi Kehadiran">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function openAttendanceEdit(id) {
+            if (!dbClient) return;
+
+            const { data, error } = await dbClient
+                .from('attendance')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error || !data) {
+                alert('Gagal mengambil data absensi.');
+                return;
+            }
+
+            const newStatus = prompt("Ubah Status Kehadiran (Hadir, Terlambat, Cuti, Izin, Alpha):", data.status);
+            if (newStatus === null) return;
+
+            const newClockIn = prompt("Ubah Jam Masuk (HH:MM:SS format atau kosongkan):", data.clock_in || '');
+            const newClockOut = prompt("Ubah Jam Pulang (HH:MM:SS format atau kosongkan):", data.clock_out || '');
+            const newOvertime = prompt("Ubah Jam Lembur (angka, misal 1.5):", data.overtime_hours || 0);
+            const newNotes = prompt("Catatan HR / Alasan Koreksi:", data.notes || '');
+
+            const { error: updateError } = await dbClient
+                .from('attendance')
+                .update({
+                    status: newStatus.trim(),
+                    clock_in: newClockIn.trim() !== '' ? newClockIn.trim() : null,
+                    clock_out: newClockOut.trim() !== '' ? newClockOut.trim() : null,
+                    overtime_hours: newOvertime ? parseFloat(newOvertime) : 0,
+                    notes: newNotes.trim()
+                })
+                .eq('id', id);
+
+            if (updateError) {
+                alert('Gagal memperbarui absensi: ' + updateError.message);
+                return;
+            }
+
+            alert('Koreksi kehadiran berhasil disimpan!');
+            initAttendanceModule();
         }
 
         // ==========================================
