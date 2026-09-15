@@ -85,9 +85,11 @@
 
     <script>
         // ==========================================
-        // INISIALISASI KLIEN DATABASE
+        // INISIALISASI KLIEN DATABASE & GLOBAL CACHE
         // ==========================================
         let dbClient = null;
+        let allEmployeesCache = [];
+
         try {
             const SUPABASE_URL = 'https://rykepptnfqftcwpdjpqd.supabase.co';
             const SUPABASE_ANON_KEY = 'sb_publishable_burXWke6kJSJxourw9nixQ_iboSIbYi';
@@ -129,6 +131,8 @@
                     initOrganizationAdd();
                 } else if (moduleName === 'employees') {
                     fetchEmployeesFromSupabase();
+                } else if (moduleName === 'employee-edit') {
+                    initEmployeeEdit();
                 } else if (moduleName === 'dashboard') {
                     initDashboard();
                 }
@@ -183,16 +187,16 @@
 
         document.addEventListener('input', function(e) {
             if (!e.target) return;
-            if (e.target.id === 'inputNik' || e.target.id === 'inputTelp' || e.target.id === 'inputDaruratTelp') {
+            if (e.target.id === 'inputNik' || e.target.id === 'editNik' || e.target.id === 'inputTelp' || e.target.id === 'editTelp' || e.target.id === 'inputDaruratTelp' || e.target.id === 'editDaruratTelp') {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '');
             }
-            if (e.target.id === 'inputDaruratNama') {
+            if (e.target.id === 'inputDaruratNama' || e.target.id === 'editDaruratNama') {
                 e.target.value = e.target.value.replace(/[0-9]/g, '');
             }
-            if (e.target.id === 'inputTahunMasuk') {
+            if (e.target.id === 'inputTahunMasuk' || e.target.id === 'editTahunMasuk') {
                 e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
             }
-            if (e.target.id === 'inputIpk') {
+            if (e.target.id === 'inputIpk' || e.target.id === 'editIpk') {
                 let val = parseFloat(e.target.value);
                 if (val > 4) e.target.value = '4';
                 if (val < 0) e.target.value = '0';
@@ -201,40 +205,42 @@
 
         document.addEventListener('change', function(e) {
             if (!e.target) return;
-            if (e.target.id === 'inputJenisKontrak') {
-                const endDateContainer = document.getElementById('endDateContainer');
-                const inputEndDate = document.getElementById('inputEndDate');
-                const inputJoinDate = document.getElementById('inputJoinDate');
+            if (e.target.id === 'inputJenisKontrak' || e.target.id === 'editJenisKontrak') {
+                const isEdit = e.target.id.startsWith('edit');
+                const endDateContainer = document.getElementById(isEdit ? 'editEndDateContainer' : 'endDateContainer');
+                const inputEndDate = document.getElementById(isEdit ? 'editEndDate' : 'inputEndDate');
                 const jenisKontrak = e.target.value;
 
                 if (jenisKontrak === 'Kontrak' || jenisKontrak === 'Probation') {
                     if (endDateContainer) endDateContainer.style.display = 'grid';
-                    if (inputEndDate) {
-                        inputEndDate.required = true;
-                        if (inputJoinDate && inputJoinDate.value) {
-                            inputEndDate.min = inputJoinDate.value;
-                        }
-                    }
+                    if (inputEndDate) inputEndDate.required = true;
                 } else {
                     if (endDateContainer) endDateContainer.style.display = 'none';
                     if (inputEndDate) {
                         inputEndDate.required = false;
                         inputEndDate.value = '';
-                        inputEndDate.removeAttribute('min');
-                    }
-                }
-            }
-
-            if (e.target.id === 'inputJoinDate') {
-                const inputEndDate = document.getElementById('inputEndDate');
-                if (inputEndDate && e.target.value) {
-                    inputEndDate.min = e.target.value;
-                    if (inputEndDate.value && inputEndDate.value < e.target.value) {
-                        inputEndDate.value = '';
                     }
                 }
             }
         });
+
+        // ==========================================
+        // HELPER WARNA BADGE STATUS
+        // ==========================================
+        function getStatusBadgeStyle(status) {
+            switch(status) {
+                case 'Aktif':
+                    return 'background: #dcfce7; color: #15803d;';
+                case 'Probation':
+                    return 'background: #fef3c7; color: #b45309;';
+                case 'Kontrak':
+                    return 'background: #e0f2fe; color: #0369a1;';
+                case 'Nonaktif':
+                    return 'background: #fee2e2; color: #991b1b;';
+                default:
+                    return 'background: #f1f5f9; color: #475569;';
+            }
+        }
 
         // ==========================================
         // INTEGRASI FORM TAMBAH KARYAWAN KE SUPABASE
@@ -244,15 +250,15 @@
                 e.preventDefault();
                 const inputNik = document.getElementById('inputNik');
                 const inputNama = document.getElementById('inputNama');
-                const inputEmail = document.getElementById('inputEmail');
+                const inputEmailPerusahaan = document.getElementById('inputEmailPerusahaan');
                 const inputTelp = document.getElementById('inputTelp');
                 const inputDaruratTelp = document.getElementById('inputDaruratTelp');
                 const inputJenisKontrak = document.getElementById('inputJenisKontrak');
                 const inputEndDate = document.getElementById('inputEndDate');
                 const inputJoinDate = document.getElementById('inputJoinDate');
                 const inputIpk = document.getElementById('inputIpk');
-                const inputDepartemen = document.getElementById('inputDepartemen');
-                const inputJabatan = document.getElementById('inputJabatan');
+                const inputDivisi = document.getElementById('inputDivisi');
+                const inputJurusan = document.getElementById('inputJurusan');
 
                 if (inputNik && inputNik.value.length !== 16) {
                     alert('NIK wajib diisi tepat 16 digit angka.');
@@ -266,56 +272,26 @@
                     return;
                 }
 
-                if (inputDaruratTelp && (inputDaruratTelp.value.length < 10 || inputDaruratTelp.value.length > 13)) {
-                    alert('Nomor Telepon Kontak Darurat wajib diisi antara 10 hingga 13 digit.');
-                    inputDaruratTelp.focus();
-                    return;
-                }
-
-                if (inputJenisKontrak && (inputJenisKontrak.value === 'Kontrak' || inputJenisKontrak.value === 'Probation')) {
-                    if (inputEndDate && !inputEndDate.value) {
-                        alert('Tanggal Berakhir (End Date) wajib diisi untuk jenis kontrak Kontrak atau Probation.');
-                        inputEndDate.focus();
-                        return;
-                    }
-
-                    if (inputJoinDate && inputEndDate && inputJoinDate.value && inputEndDate.value < inputJoinDate.value) {
-                        alert('Tanggal Berakhir (End Date) tidak boleh lebih awal dari Tanggal Bergabung (Join Date).');
-                        inputEndDate.focus();
-                        return;
-                    }
-                }
-
-                if (inputIpk && inputIpk.value !== '') {
-                    const ipk = parseFloat(inputIpk.value);
-                    if (isNaN(ipk) || ipk < 0 || ipk > 4) {
-                        alert('IPK wajib diisi dengan nilai antara 0.00 hingga 4.00.');
-                        inputIpk.focus();
-                        return;
-                    }
-                }
-
                 if (!dbClient) {
                     alert('Klien database belum terinisialisasi.');
                     return;
                 }
 
-                // Kirim data ke tabel employees di Supabase
                 const { error: insertError } = await dbClient
                     .from('employees')
                     .insert([
                         {
                             nik: inputNik ? inputNik.value.trim() : null,
                             name: inputNama ? inputNama.value.trim() : null,
-                            email: inputEmail ? inputEmail.value.trim() : null,
+                            email: inputEmailPerusahaan ? inputEmailPerusahaan.value.trim() : null,
                             telepon: inputTelp ? inputTelp.value.trim() : null,
                             kontak_darurat_telepon: inputDaruratTelp ? inputDaruratTelp.value.trim() : null,
                             jenis_kontrak: inputJenisKontrak ? inputJenisKontrak.value : null,
                             join_date: inputJoinDate && inputJoinDate.value ? inputJoinDate.value : null,
                             end_date: inputEndDate && inputEndDate.value ? inputEndDate.value : null,
                             ipk: inputIpk && inputIpk.value !== '' ? parseFloat(inputIpk.value) : null,
-                            department: inputDepartemen ? inputDepartemen.value : null,
-                            position: inputJabatan ? inputJabatan.value.trim() : null,
+                            department: inputDivisi ? inputDivisi.value : null,
+                            position: inputJurusan ? inputJurusan.value.trim() + ' Graduate' : 'Staff',
                             status: 'Aktif'
                         }
                     ]);
@@ -331,10 +307,224 @@
         });
 
         // ==========================================
-        // FETCH DATA DASHBOARD DENGAN CACHE CADANGAN
+        // FETCH & RENDER KARYAWAN (DENGAN PENCARIAN MIN 3 HURUF & FILTER)
+        // ==========================================
+        async function fetchEmployeesFromSupabase() {
+            const tbody = document.getElementById('employeeTableBody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await dbClient
+                    .from('employees')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    allEmployeesCache = data;
+                    localStorage.setItem('cache_employees', JSON.stringify(data));
+                } else {
+                    const cached = localStorage.getItem('cache_employees');
+                    allEmployeesCache = cached ? JSON.parse(cached) : [];
+                }
+            } catch (err) {
+                console.warn('Menggunakan cache lokal karena kendala koneksi:', err.message);
+                const cached = localStorage.getItem('cache_employees');
+                allEmployeesCache = cached ? JSON.parse(cached) : [];
+            }
+
+            renderEmployeeTable(allEmployeesCache);
+            setupEmployeeSearchAndFilter();
+        }
+
+        function renderEmployeeTable(dataList) {
+            const tbody = document.getElementById('employeeTableBody');
+            if (!tbody) return;
+
+            if (!dataList || dataList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan yang ditemukan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            dataList.forEach(emp => {
+                const empName = emp.name || emp.nama || '-';
+                const empNik = emp.nik || '-';
+                const empDept = emp.department || emp.divisi || '-';
+                const empPos = emp.position || emp.jabatan || '-';
+                const empStatus = emp.status || 'Aktif';
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px; font-weight: 600; color: #1e293b;">${empNik}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${empName}</td>
+                        <td style="padding: 14px 20px; color: #64748b;">${empDept}</td>
+                        <td style="padding: 14px 20px; color: #64748b;">${empPos}</td>
+                        <td style="padding: 14px 20px;">
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; ${getStatusBadgeStyle(empStatus)}">${empStatus}</span>
+                        </td>
+                        <td style="padding: 14px 20px; text-align: center;">
+                            <button onclick="editEmployee('${emp.id}')" style="padding: 6px 12px; background: #e0f2fe; color: #0369a1; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;" title="Edit Karyawan">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function setupEmployeeSearchAndFilter() {
+            const searchInput = document.getElementById('searchEmployeeInput');
+            const filterSelect = document.getElementById('filterStatusSelect');
+
+            const applyFilterAndSearch = () => {
+                const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+                const selectedStatus = filterSelect ? filterSelect.value : '';
+
+                let filtered = allEmployeesCache.filter(emp => {
+                    const name = (emp.name || emp.nama || '').toLowerCase();
+                    const nik = (emp.nik || '').toLowerCase();
+                    const status = emp.status || 'Aktif';
+
+                    // Aturan pencarian: Minimal 3 huruf atau kosong
+                    let matchSearch = true;
+                    if (query.length > 0) {
+                        if (query.length < 3) {
+                            matchSearch = true; // Jika kurang dari 3 huruf, abaikan pencarian teks agar tabel tidak kosong mendadak
+                        } else {
+                            matchSearch = name.includes(query) || nik.includes(query);
+                        }
+                    }
+
+                    // Filter Status
+                    let matchStatus = true;
+                    if (selectedStatus !== '') {
+                        matchStatus = (status === selectedStatus);
+                    }
+
+                    return matchSearch && matchStatus;
+                });
+
+                renderEmployeeTable(filtered);
+            };
+
+            if (searchInput) {
+                searchInput.addEventListener('input', applyFilterAndSearch);
+            }
+            if (filterSelect) {
+                filterSelect.addEventListener('change', applyFilterAndSearch);
+            }
+        }
+
+        // ==========================================
+        // EDIT KARYAWAN (NAVIGASI & INISIALISASI FORM)
+        // ==========================================
+        function editEmployee(id) {
+            sessionStorage.setItem('activeEditEmployeeId', id);
+            loadModule('employee-edit');
+        }
+
+        async function initEmployeeEdit() {
+            const editId = sessionStorage.getItem('activeEditEmployeeId');
+            if (!editId) {
+                alert('ID Karyawan tidak valid.');
+                loadModule('employees');
+                return;
+            }
+
+            // Cari data dari cache atau ambil dari Supabase
+            let empData = allEmployeesCache.find(e => String(e.id) === String(editId));
+            if (!empData && dbClient) {
+                const { data, error } = await dbClient
+                    .from('employees')
+                    .select('*')
+                    .eq('id', editId)
+                    .single();
+                if (!error && data) empData = data;
+            }
+
+            if (!empData) {
+                alert('Data karyawan tidak ditemukan.');
+                loadModule('employees');
+                return;
+            }
+
+            // Isi form dengan data yang ada
+            document.getElementById('editEmployeeId').value = empData.id || '';
+            document.getElementById('editNama').value = empData.name || empData.nama || '';
+            document.getElementById('editNik').value = empData.nik || '';
+            document.getElementById('editTelp').value = empData.telepon || '';
+            document.getElementById('editEmailPerusahaan').value = empData.email || '';
+            document.getElementById('editJenisKontrak').value = empData.jenis_kontrak || '';
+            document.getElementById('editJoinDate').value = empData.join_date || '';
+            document.getElementById('editStatus').value = empData.status || 'Aktif';
+            document.getElementById('editDivisi').value = empData.department || empData.divisi || '';
+            document.getElementById('editAtasan').value = empData.atasan || '';
+            document.getElementById('editLokasi').value = empData.lokasi || '';
+            document.getElementById('editPendidikanTerakhir').value = empData.pendidikan_terakhir || '';
+            document.getElementById('editTahunMasuk').value = empData.tahun_masuk || '';
+            document.getElementById('editUniversitas').value = empData.universitas || '';
+            document.getElementById('editJurusan').value = empData.jurusan || '';
+            document.getElementById('editIpk').value = empData.ipk !== null && empData.ipk !== undefined ? empData.ipk : '';
+
+            // Handle visibilitas End Date jika Kontrak/Probation
+            const editEndDateContainer = document.getElementById('editEndDateContainer');
+            const editEndDate = document.getElementById('editEndDate');
+            if (empData.jenis_kontrak === 'Kontrak' || empData.jenis_kontrak === 'Probation') {
+                if (editEndDateContainer) editEndDateContainer.style.display = 'grid';
+                if (editEndDate) {
+                    editEndDate.value = empData.end_date || '';
+                    editEndDate.required = true;
+                }
+            }
+
+            // Handle Submit Update Form Edit
+            const formEdit = document.getElementById('formEditEmployee');
+            if (formEdit) {
+                formEdit.onsubmit = async function(e) {
+                    e.preventDefault();
+
+                    const updatedData = {
+                        name: document.getElementById('editNama').value.trim(),
+                        nik: document.getElementById('editNik').value.trim(),
+                        telepon: document.getElementById('editTelp').value.trim(),
+                        email: document.getElementById('editEmailPerusahaan').value.trim(),
+                        jenis_kontrak: document.getElementById('editJenisKontrak').value,
+                        join_date: document.getElementById('editJoinDate').value || null,
+                        end_date: document.getElementById('editEndDate').value || null,
+                        status: document.getElementById('editStatus').value,
+                        department: document.getElementById('editDivisi').value,
+                        position: document.getElementById('editJurusan').value ? document.getElementById('editJurusan').value + ' Graduate' : 'Staff',
+                        ipk: document.getElementById('editIpk').value !== '' ? parseFloat(document.getElementById('editIpk').value) : null
+                    };
+
+                    if (!dbClient) {
+                        alert('Klien database belum terinisialisasi.');
+                        return;
+                    }
+
+                    const { error: updateError } = await dbClient
+                        .from('employees')
+                        .update(updatedData)
+                        .eq('id', editId);
+
+                    if (updateError) {
+                        alert('Gagal memperbarui data karyawan: ' + updateError.message);
+                        return;
+                    }
+
+                    alert('Perubahan data karyawan berhasil disimpan ke database!');
+                    sessionStorage.removeItem('activeEditEmployeeId');
+                    loadModule('employees');
+                };
+            }
+        }
+
+        // ==========================================
+        // FETCH DATA DASHBOARD
         // ==========================================
         async function initDashboard() {
-            // 1. Total Karyawan
             const statEmp = document.getElementById('statTotalEmployees');
             if (statEmp) {
                 try {
@@ -352,7 +542,6 @@
                 }
             }
 
-            // 2. Karyawan Terbaru di Dashboard
             const dashTableBody = document.getElementById('dashboardEmployeeTableBody');
             if (dashTableBody) {
                 let recentData = [];
@@ -378,13 +567,18 @@
                 if (recentData.length > 0) {
                     dashTableBody.innerHTML = '';
                     recentData.forEach(emp => {
+                        const empName = emp.name || emp.nama || '-';
+                        const empDept = emp.department || emp.divisi || '-';
+                        const empPos = emp.position || emp.jabatan || '-';
+                        const empStatus = emp.status || 'Aktif';
+
                         dashTableBody.innerHTML += `
                             <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 12px 16px; font-weight: 600; color: #1e293b;">${emp.name || emp.nama || '-'}</td>
-                                <td style="padding: 12px 16px; color: #475569;">${emp.department || emp.departemen || '-'}</td>
-                                <td style="padding: 12px 16px; color: #475569;">${emp.position || emp.jabatan || '-'}</td>
+                                <td style="padding: 12px 16px; font-weight: 600; color: #1e293b;">${empName}</td>
+                                <td style="padding: 12px 16px; color: #475569;">${empDept}</td>
+                                <td style="padding: 12px 16px; color: #475569;">${empPos}</td>
                                 <td style="padding: 12px 16px;">
-                                    <span style="background: #dcfce7; color: #166534; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600;">${emp.status || 'Aktif'}</span>
+                                    <span style="padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; ${getStatusBadgeStyle(empStatus)}">${empStatus}</span>
                                 </td>
                             </tr>
                         `;
@@ -393,59 +587,6 @@
                     dashTableBody.innerHTML = `<tr><td colspan="4" style="padding: 16px; text-align: center; color: #64748b;">Belum ada data karyawan.</td></tr>`;
                 }
             }
-        }
-
-        // ==========================================
-        // FETCH DATA KARYAWAN DARI SUPABASE + CACHE CADANGAN
-        // ==========================================
-        async function fetchEmployeesFromSupabase() {
-            const tbody = document.getElementById('employeeTableBody');
-            if (!tbody) return;
-
-            let dataToRender = [];
-
-            try {
-                const { data, error } = await dbClient
-                    .from('employees')
-                    .select('*')
-                    .order('id', { ascending: true });
-
-                if (error) throw error;
-
-                if (data && data.length > 0) {
-                    dataToRender = data;
-                    localStorage.setItem('cache_employees', JSON.stringify(data));
-                } else {
-                    const cached = localStorage.getItem('cache_employees');
-                    dataToRender = cached ? JSON.parse(cached) : [];
-                }
-            } catch (err) {
-                console.warn('Menggunakan cache lokal karena kendala koneksi:', err.message);
-                const cached = localStorage.getItem('cache_employees');
-                if (cached) {
-                    dataToRender = JSON.parse(cached);
-                }
-            }
-
-            if (dataToRender.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan.</td></tr>`;
-                return;
-            }
-
-            tbody.innerHTML = '';
-            dataToRender.forEach(emp => {
-                tbody.innerHTML += `
-                    <tr style="border-bottom: 1px solid #e2e8f0;">
-                        <td style="padding: 14px 20px; font-weight: 600; color: #1e293b;">${emp.nik || '-'}</td>
-                        <td style="padding: 14px 20px; color: #334155;">${emp.name || emp.nama || '-'}</td>
-                        <td style="padding: 14px 20px; color: #64748b;">${emp.department || emp.departemen || '-'}</td>
-                        <td style="padding: 14px 20px; color: #64748b;">${emp.position || emp.jabatan || '-'}</td>
-                        <td style="padding: 14px 20px;">
-                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: ${emp.status === 'Aktif' ? '#dcfce7; color: #15803d;' : '#f1f5f9; color: #475569;'}">${emp.status || 'Aktif'}</span>
-                        </td>
-                    </tr>
-                `;
-            });
         }
 
         async function fetchDepartmentsFromSupabase() {
@@ -480,7 +621,7 @@
                         <td style="padding: 14px 20px; color: #334155;">${dept.nama}</td>
                         <td style="padding: 14px 20px; color: #64748b;">${dept.hod || '-'}</td>
                         <td style="padding: 14px 20px;">
-                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; background: ${dept.status === 'Aktif' ? '#dcfce7; color: #15803d;' : '#f1f5f9; color: #475569;'}">${dept.status}</span>
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; ${getStatusBadgeStyle(dept.status)}">${dept.status}</span>
                         </td>
                     </tr>
                 `;

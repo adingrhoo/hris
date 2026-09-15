@@ -9,15 +9,18 @@
     <div style="background: white; padding: 16px 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <div style="position: relative; width: 320px;">
             <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 0.9rem;"></i>
-            <input type="text" placeholder="Cari nama karyawan..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
+            <!-- Ditambahkan id dan info minimal 3 huruf -->
+            <input type="text" id="searchEmployeeInput" placeholder="Cari nama karyawan (min. 3 huruf)..." style="width: 100%; padding: 10px 14px 10px 38px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; outline: none; box-sizing: border-box;">
         </div>
         
         <div style="display: flex; align-items: center; gap: 8px;">
             <div style="position: relative; display: inline-block;">
                 <i class="fa-solid fa-filter" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.85rem; pointer-events: none;"></i>
-                <select style="padding: 10px 36px 10px 36px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;">
+                <select id="filterStatusSelect" style="padding: 10px 36px 10px 36px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background: white; color: #334155; outline: none; appearance: none; -webkit-appearance: none; cursor: pointer;">
                     <option value="">Filter Status</option>
                     <option value="Aktif">Aktif</option>
+                    <option value="Probation">Probation</option>
+                    <option value="Kontrak">Kontrak</option>
                     <option value="Nonaktif">Nonaktif</option>
                 </select>
                 <i class="fa-solid fa-chevron-down" style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 0.8rem; pointer-events: none;"></i>
@@ -34,6 +37,7 @@
                     <th style="padding: 14px 20px; font-weight: 600;">Divisi</th>
                     <th style="padding: 14px 20px; font-weight: 600;">Jabatan</th>
                     <th style="padding: 14px 20px; font-weight: 600;">Status</th>
+                    <th style="padding: 14px 20px; font-weight: 600; text-align: center;">Aksi</th>
                 </tr>
             </thead>
             <tbody id="employeeTableBody" style="color: #334155;">
