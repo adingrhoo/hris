@@ -781,6 +781,12 @@
                 return;
             }
 
+            // AUTO-FETCH CACHE KARYAWAN JIKA KOSONG (AGAR VALIDASI SELALU SIAP)
+            if (allEmployeesCache.length === 0) {
+                const { data: empData } = await dbClient.from('employees').select('*');
+                allEmployeesCache = empData || [];
+            }
+
             const { data, error } = await dbClient
                 .from('overtime')
                 .select(`
@@ -885,12 +891,18 @@
             initOvertimeModule();
         }
 
-        function previewOvertimeCsv(event) {
+        async function previewOvertimeCsv(event) {
             const file = event.target.files[0];
             if (!file) return;
 
+            // PASTIKAN CACHE KARYAWAN TERISI SEBELUM MEMBACA FILE CSV
+            if (allEmployeesCache.length === 0 && dbClient) {
+                const { data: empData } = await dbClient.from('employees').select('*');
+                allEmployeesCache = empData || [];
+            }
+
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = function(e) {
                 const text = e.target.result;
                 const rows = text.split('\n').map(r => r.trim()).filter(r => r.length > 0);
                 
