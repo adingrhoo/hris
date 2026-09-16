@@ -1,32 +1,33 @@
-<div class="p-6">
-    <div class="flex justify-between items-center mb-6">
+<div style="padding: 30px;">
+    <!-- HEADER MODUL (RAPI & TIDAK BERTUMPUK) -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Rekapitulasi Kehadiran</h1>
-            <p class="text-sm text-gray-500">Pantau jam masuk, pulang, lembur, dan status kehadiran harian pegawai.</p>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Rekapitulasi Kehadiran</h1>
+            <p style="font-size: 0.875rem; color: #64748b; margin: 0;">Pantau jam masuk, jam pulang, lembur, dan status kehadiran harian pegawai secara real-time.</p>
         </div>
-        <div class="flex items-center gap-3">
-            <label class="text-sm font-medium text-gray-600">Pilih Tanggal:</label>
-            <input type="date" id="filterAttendanceDate" value="2026-09-15" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div style="display: flex; align-items: center; gap: 12px; background: white; padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <label for="filterAttendanceDate" style="font-size: 0.85rem; font-weight: 600; color: #475569; white-space: nowrap;">Pilih Tanggal:</label>
+            <input type="date" id="filterAttendanceDate" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; font-size: 0.85rem; outline: none; color: #1e293b; background: white;">
         </div>
     </div>
 
-    <!-- Tabel Data Kehadiran -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+    <!-- TABEL DATA KEHADIRAN -->
+    <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
-                    <tr class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wider border-b border-gray-100">
-                        <th class="py-3 px-4 font-semibold">ID & Nama Karyawan</th>
-                        <th class="py-3 px-4 font-semibold">Departemen</th>
-                        <th class="py-3 px-4 font-semibold">Jam Masuk</th>
-                        <th class="py-3 px-4 font-semibold">Jam Pulang</th>
-                        <th class="py-3 px-4 font-semibold">Status</th>
-                        <th class="py-3 px-4 font-semibold">Lembur</th>
-                        <th class="py-3 px-4 font-semibold text-center">Aksi (HR Override)</th>
+                    <tr style="background: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 14px 20px; font-weight: 600;">Nama & ID Karyawan</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Departemen</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Jam Masuk</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Jam Pulang</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Status</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Lembur</th>
+                        <th style="padding: 14px 20px; font-weight: 600; text-align: center;">Aksi (HR Override)</th>
                     </tr>
                 </thead>
-                <tbody id="attendanceTableBody" class="divide-y divide-gray-100 text-sm text-gray-700">
-                    <!-- Data akan dirender otomatis via JavaScript -->
+                <tbody id="attendanceTableBody" style="font-size: 0.875rem; color: #334155;">
+                    <!-- Data akan dimuat otomatis via JavaScript -->
                 </tbody>
             </table>
         </div>

@@ -625,7 +625,14 @@
         // ==========================================
         async function initAttendanceModule() {
             const dateInput = document.getElementById('filterAttendanceDate');
-            const selectedDate = dateInput ? dateInput.value : '2026-09-15';
+            
+            // Otomatis set ke tanggal hari ini jika belum ada nilai
+            const todayStr = new Date().toISOString().split('T')[0];
+            if (dateInput && !dateInput.value) {
+                dateInput.value = todayStr;
+            }
+            
+            const selectedDate = dateInput ? dateInput.value : todayStr;
 
             if (dateInput && !dateInput.dataset.listener) {
                 dateInput.dataset.listener = 'true';
@@ -653,7 +660,7 @@
                     status,
                     overtime_hours,
                     notes,
-                    employees (nik, name, department, position)
+                    employees (name, department, position)
                 `)
                 .eq('date', selectedDate);
 
@@ -672,8 +679,7 @@
                 const emp = item.employees || {};
                 const name = emp.name || 'Tidak Diketahui';
                 const dept = emp.department || '-';
-                const userNik = emp.nik || '-';
-                const empIdBadge = item.employee_id || '-';
+                const empId = item.employee_id || '-'; // Employee ID dipindah menggantikan NIK
                 
                 let badgeStyle = 'background: #f1f5f9; color: #475569;';
                 if (item.status === 'Hadir') badgeStyle = 'background: #dcfce7; color: #15803d;';
@@ -685,8 +691,8 @@
                 tbody.innerHTML += `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 14px 20px;">
-                            <div style="font-weight: 600; color: #1e293b;">${name} <span style="color:#0369a1; font-size:0.7rem; background:#e0f2fe; padding:2px 6px; border-radius:4px; margin-left:4px;">${empIdBadge}</span></div>
-                            <div style="font-size: 0.75rem; color: #64748b;">NIK: ${userNik}</div>
+                            <div style="font-weight: 600; color: #1e293b;">${name}</div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #0369a1; margin-top: 2px;">${empId}</div>
                         </td>
                         <td style="padding: 14px 20px; color: #334155;">${dept}</td>
                         <td style="padding: 14px 20px; font-family: monospace; font-size: 0.85rem; color: #334155;">${item.clock_in ? item.clock_in : '<span style="color: #94a3b8;">-</span>'}</td>
