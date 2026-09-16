@@ -1173,36 +1173,118 @@
         }
 
         async function initLeaveAddModule() {
-            const selectEmp = document.getElementById('selectLeaveEmployee');
-            if (!selectEmp) return;
-
             const today = new Date().toISOString().split('T')[0];
-            document.getElementById('inputLeaveStartDate').value = today;
-            document.getElementById('inputLeaveEndDate').value = today;
+            const startDateEl = document.getElementById('inputLeaveStartDate');
+            const endDateEl = document.getElementById('inputLeaveEndDate');
+            if (startDateEl) startDateEl.value = today;
+            if (endDateEl) endDateEl.value = today;
 
             if (allEmployeesCache.length === 0 && dbClient) {
                 const { data } = await dbClient.from('employees').select('*').eq('status', 'Aktif');
                 allEmployeesCache = data || [];
             }
 
-            selectEmp.innerHTML = `<option value="" disabled selected>-- Pilih Karyawan --</option>`;
-            const activeEmps = allEmployeesCache.filter(e => e.status === 'Aktif');
-            
-            activeEmps.forEach(emp => {
-                selectEmp.innerHTML += `<option value="${emp.employee_id}">${emp.employee_id} - ${emp.name} (${emp.department || '-'})</option>`;
+            renderEmployeeDropdownOptions(allEmployeesCache);
+            await loadLeaveTypesIntoSelect();
+
+            // Tutup dropdown karyawan jika klik di luar area
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('employeeDropdownContainer');
+                const inputSearch = document.getElementById('inputEmployeeSearch');
+                if (container && inputSearch) {
+                    if (!container.contains(e.target) && e.target !== inputSearch) {
+                        container.style.display = 'none';
+                    }
+                }
             });
         }
 
-        async function updateEmployeeLeaveBalanceInfo() {
-            const selectEmp = document.getElementById('selectLeaveEmployee');
-            const infoDiv = document.getElementById('leaveBalanceInfoDisplay');
-            if (!selectEmp || !infoDiv || !dbClient) return;
+        // Fungsi Parameterisasi Jenis Cuti (Dinamis dari DB dengan Fallback)
+        async function loadLeaveTypesIntoSelect() {
+            const selectType = document.getElementById('selectLeaveType');
+            if (!selectType) return;
 
-            const empId = selectEmp.value;
-            if (!empId) {
-                infoDiv.textContent = '';
+            let leaveTypesList = [
+                "Cuti Tahunan",
+                "Cuti Sakit",
+                "Cuti Haid",
+                "Cuti Melahirkan",
+                "Cuti Keguguran",
+                "Cuti Panjang",
+                "Cuti Bersama",
+                "Izin Menikah",
+                "Izin Menikahkan Anak",
+                "Izin Khitanan Anak",
+                "Izin Baptisan Anak",
+                "Izin Kematian Keluarga",
+                "Izin Istri Melahirkan/Keguguran"
+            ];
+
+            if (dbClient) {
+                const { data, error } = await dbClient.from('leave_types').select('*').order('name');
+                if (!error && data && data.length > 0) {
+                    leaveTypesList = data.map(t => t.name);
+                }
+            }
+
+            selectType.innerHTML = `<option value="" disabled selected>-- Pilih Jenis Cuti / Izin --</option>`;
+            leaveTypesList.forEach(type => {
+                selectType.innerHTML += `<option value="${type}">${type}</option>`;
+            });
+        }
+
+        function toggleEmployeeDropdown(show) {
+            const container = document.getElementById('employeeDropdownContainer');
+            if (container) {
+                container.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function renderEmployeeDropdownOptions(employees) {
+            const container = document.getElementById('employeeDropdownContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+            const activeEmps = employees.filter(e => e.status === 'Aktif');
+
+            if (activeEmps.length === 0) {
+                container.innerHTML = `<div style="padding: 10px 14px; color: #64748b; font-size: 0.85rem;">Tidak ada karyawan ditemukan</div>`;
                 return;
             }
+
+            activeEmps.forEach(emp => {
+                const item = document.createElement('div');
+                item.style.cssText = "padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; color: #334155;";
+                item.innerHTML = `<strong>${emp.employee_id}</strong> - ${emp.name} <span style="color: #64748b; font-size: 0.78rem;">(${emp.department || '-'})</span>`;
+                
+                item.onmouseover = () => item.style.background = '#f8fafc';
+                item.onmouseout = () => item.style.background = '#fff';
+                
+                item.onclick = () => {
+                    document.getElementById('inputEmployeeSearch').value = `${emp.employee_id} - ${emp.name} (${emp.department || '-'})`;
+                    document.getElementById('selectedEmployeeId').value = emp.employee_id;
+                    container.style.display = 'none';
+                    updateEmployeeLeaveBalanceInfo(emp.employee_id);
+                };
+
+                container.appendChild(item);
+            });
+        }
+
+        function filterEmployeeDropdown() {
+            const query = document.getElementById('inputEmployeeSearch').value.toLowerCase();
+            const filtered = allEmployeesCache.filter(e => 
+                (e.name || '').toLowerCase().includes(query) || 
+                (e.employee_id || '').toLowerCase().includes(query) ||
+                (e.department || '').toLowerCase().includes(query)
+            );
+            toggleEmployeeDropdown(true);
+            renderEmployeeDropdownOptions(filtered);
+        }
+
+        async function updateEmployeeLeaveBalanceInfo(empId) {
+            const infoDiv = document.getElementById('leaveBalanceInfoDisplay');
+            if (!infoDiv || !dbClient || !empId) return;
 
             const currentYear = new Date().getFullYear();
             const { data: balanceData, error } = await dbClient
@@ -1226,7 +1308,7 @@
         async function submitLeaveForm(event) {
             event.preventDefault();
 
-            const empId = document.getElementById('selectLeaveEmployee').value;
+            const empId = document.getElementById('selectedEmployeeId').value;
             const leaveType = document.getElementById('selectLeaveType').value;
             const startDate = document.getElementById('inputLeaveStartDate').value;
             const endDate = document.getElementById('inputLeaveEndDate').value;
@@ -1234,7 +1316,12 @@
             const reason = document.getElementById('inputLeaveReason').value.trim();
 
             if (!empId) {
-                alert('Silakan pilih karyawan terlebih dahulu.');
+                alert('Silakan pilih karyawan terlebih dahulu dari daftar.');
+                return;
+            }
+
+            if (!leaveType) {
+                alert('Silakan pilih jenis cuti atau izin terlebih dahulu.');
                 return;
             }
 
