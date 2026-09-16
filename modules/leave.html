@@ -1,0 +1,68 @@
+<div style="padding: 30px;">
+    <!-- HEADER MODUL -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Manajemen Cuti & Izin</h1>
+            <p style="font-size: 0.875rem; color: #64748b; margin: 0;">Kelola pengajuan cuti, izin normatif, serta pantau saldo cuti tahunan pegawai.</p>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+            <!-- Tombol Ajukan Cuti/Izin -->
+            <button onclick="openLeaveRequestModal()" style="padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-plus"></i> Ajukan Cuti/Izin
+            </button>
+            
+            <!-- Tombol Tab Daftar Pengajuan -->
+            <button onclick="switchLeaveTab('requests')" id="btnTabRequests" style="padding: 10px 16px; background: #0284c7; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Daftar Pengajuan
+            </button>
+
+            <!-- Tombol Tab Saldo Cuti -->
+            <button onclick="switchLeaveTab('balances')" id="btnTabBalances" style="padding: 10px 16px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Saldo Cuti Karyawan
+            </button>
+        </div>
+    </div>
+
+    <!-- VIEW 1: DAFTAR PENGAJUAN CUTI & IZIN -->
+    <div id="leaveRequestsSection" style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 14px 20px; font-weight: 600;">Karyawan</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Jenis Cuti / Izin</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Tanggal Mulai - Selesai</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Durasi</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Alasan</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Status</th>
+                        <th style="padding: 14px 20px; font-weight: 600; text-align: center;">Aksi Approval</th>
+                    </tr>
+                </thead>
+                <tbody id="leaveTableBody" style="font-size: 0.875rem; color: #334155;">
+                    <!-- Data dimuat dinamis -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- VIEW 2: SALDO CUTI TAHUNAN -->
+    <div id="leaveBalancesSection" style="display: none; background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 14px 20px; font-weight: 600;">ID & Nama Karyawan</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Departemen</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Tahun</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Total Kuota</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Terpakai</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Sisa Kuota</th>
+                    </tr>
+                </thead>
+                <tbody id="leaveBalanceTableBody" style="font-size: 0.875rem; color: #334155;">
+                    <!-- Data saldo cuti dimuat dinamis -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

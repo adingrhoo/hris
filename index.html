@@ -33,10 +33,7 @@
 
         <main class="main-content">
             <header class="top-navbar">
-                <div class="navbar-search">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" placeholder="Cari data karyawan, departemen...">
-                </div>
+                <div style="flex: 1;"></div>
                 <div class="navbar-profile">
                     <div class="notification-icon" title="Notifikasi Sistem">
                         <i class="fa-regular fa-bell"></i>
@@ -146,6 +143,8 @@
                     initAttendanceModule();
                 } else if (moduleName === 'overtime') {
                     initOvertimeModule();
+                } else if (moduleName === 'leave') {
+                    initLeaveModule();
                 } else if (moduleName === 'dashboard') {
                     initDashboard();
                 }
@@ -894,7 +893,6 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // Reset state sinkron seketika file dipilih untuk menutup celah data lama terbawa
             parsedOvertimeUploadData = [];
             const previewCard = document.getElementById('uploadPreviewCard');
             const previewBody = document.getElementById('previewOvertimeTableBody');
@@ -922,7 +920,7 @@
                 if (!previewBody) return;
                 previewBody.innerHTML = '';
                 let hasError = false;
-                let seenRowsInFile = new Set(); // Set untuk deteksi duplikasi dalam file CSV
+                let seenRowsInFile = new Set();
 
                 let startIndex = rows[0].toLowerCase().includes('employee_id') ? 1 : 0;
 
@@ -1024,7 +1022,269 @@
         }
 
         // ==========================================
-        // 11. DASHBOARD & ORGANISASI
+        // 11. MODUL CUTI & IZIN (LEAVE MANAGEMENT)
+        // ==========================================
+        function switchLeaveTab(tab) {
+            const reqSec = document.getElementById('leaveRequestsSection');
+            const balSec = document.getElementById('leaveBalancesSection');
+            const btnReq = document.getElementById('btnTabRequests');
+            const btnBal = document.getElementById('btnTabBalances');
+
+            if (tab === 'requests') {
+                reqSec.style.display = 'block';
+                balSec.style.display = 'none';
+                btnReq.style.background = '#0284c7';
+                btnReq.style.color = 'white';
+                btnBal.style.background = '#f1f5f9';
+                btnBal.style.color = '#475569';
+                initLeaveModule();
+            } else {
+                reqSec.style.display = 'none';
+                balSec.style.display = 'block';
+                btnBal.style.background = '#0284c7';
+                btnBal.style.color = 'white';
+                btnReq.style.background = '#f1f5f9';
+                btnReq.style.color = '#475569';
+                fetchLeaveBalances();
+            }
+        }
+
+        async function initLeaveModule() {
+            const tbody = document.getElementById('leaveTableBody');
+            if (!tbody || !dbClient) return;
+
+            tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748b;">Memuat data pengajuan cuti & izin...</td></tr>`;
+
+            const { data, error } = await dbClient
+                .from('leaves')
+                .select(`
+                    id,
+                    employee_id,
+                    leave_type,
+                    start_date,
+                    end_date,
+                    total_days,
+                    reason,
+                    status,
+                    employees (name, department)
+                `)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 24px; text-align: center; color: #64748b;">Belum ada pengajuan cuti atau izin.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const emp = item.employees || {};
+                const name = emp.name || 'Tidak Diketahui';
+                const dept = emp.department || '-';
+                
+                let badgeStyle = 'background: #fef3c7; color: #b45309;';
+                if (item.status === 'Approved') badgeStyle = 'background: #dcfce7; color: #15803d;';
+                else if (item.status === 'Rejected') badgeStyle = 'background: #fee2e2; color: #991b1b;';
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px;">
+                            <div style="font-weight: 600; color: #1e293b;">${name}</div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #0369a1; margin-top: 2px;">${item.employee_id} (${dept})</div>
+                        </td>
+                        <td style="padding: 14px 20px; font-weight: 600; color: #334155;">${item.leave_type}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${item.start_date} s/d ${item.end_date}</td>
+                        <td style="padding: 14px 20px; font-weight: 600; color: #0284c7;">${item.total_days} Hari</td>
+                        <td style="padding: 14px 20px; color: #64748b; font-size: 0.85rem;">${item.reason}</td>
+                        <td style="padding: 14px 20px;">
+                            <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; ${badgeStyle}">${item.status}</span>
+                        </td>
+                        <td style="padding: 14px 20px; text-align: center;">
+                            ${item.status === 'Pending' ? `
+                                <button onclick="processLeaveApproval('${item.id}', '${item.employee_id}', '${item.leave_type}', ${item.total_days}, 'Approved')" style="padding: 6px 10px; background: #dcfce7; color: #15803d; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem; margin-right: 4px;" title="Setujui">
+                                    <i class="fa-solid fa-check"></i>
+                                </button>
+                                <button onclick="processLeaveApproval('${item.id}', '${item.employee_id}', '${item.leave_type}', ${item.total_days}, 'Rejected')" style="padding: 6px 10px; background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;" title="Tolak">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                            ` : `<span style="font-size: 0.75rem; color: #94a3b8; font-weight: 600;">Selesai</span>`}
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function fetchLeaveBalances() {
+            const tbody = document.getElementById('leaveBalanceTableBody');
+            if (!tbody || !dbClient) return;
+
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Memuat saldo cuti pegawai...</td></tr>`;
+
+            const currentYear = new Date().getFullYear();
+
+            const { data, error } = await dbClient
+                .from('employees')
+                .select(`
+                    employee_id,
+                    name,
+                    department,
+                    leave_balances (id, year, total_quota, used_quota, remaining_quota)
+                `)
+                .eq('status', 'Aktif');
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat saldo cuti: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Belum ada data karyawan aktif.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            for (const emp of data) {
+                let balance = (emp.leave_balances || []).find(b => b.year === currentYear);
+                
+                let total = balance ? balance.total_quota : 12;
+                let used = balance ? balance.used_quota : 0;
+                let remaining = total - used;
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px;">
+                            <div style="font-weight: 600; color: #1e293b;">${emp.name}</div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #0369a1; margin-top: 2px;">${emp.employee_id}</div>
+                        </td>
+                        <td style="padding: 14px 20px; color: #334155;">${emp.department || '-'}</td>
+                        <td style="padding: 14px 20px; color: #334155; font-weight: 600;">${currentYear}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${total} Hari</td>
+                        <td style="padding: 14px 20px; color: #b45309; font-weight: 600;">${used} Hari</td>
+                        <td style="padding: 14px 20px; color: #15803d; font-weight: 700;">${remaining} Hari</td>
+                    </tr>
+                `;
+            }
+        }
+
+        async function openLeaveRequestModal() {
+            const empId = prompt("Masukkan ID Karyawan yang mengajukan (Contoh: EMP-0001):");
+            if (!empId) return;
+
+            let empExists = allEmployeesCache.find(e => e.employee_id === empId.trim());
+            if (!empExists && dbClient) {
+                const { data } = await dbClient.from('employees').select('employee_id').eq('employee_id', empId.trim()).single();
+                if (!data) {
+                    alert('ID Karyawan tidak ditemukan di sistem!');
+                    return;
+                }
+            }
+
+            const leaveType = prompt("Pilih Jenis Cuti / Izin:\n1. Cuti Tahunan\n2. Cuti Sakit\n3. Cuti Khusus / Alasan Penting\n4. Izin Pribadi\n\n(Ketik persis nama jenis cuti/izin):", "Cuti Tahunan");
+            if (!leaveType) return;
+
+            const startDate = prompt("Tanggal Mulai (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+            if (!startDate) return;
+
+            const endDate = prompt("Tanggal Selesai (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+            if (!endDate) return;
+
+            if (new Date(endDate) < new Date(startDate)) {
+                alert('Validasi Gagal: Tanggal selesai tidak boleh lebih awal dari tanggal mulai!');
+                return;
+            }
+
+            const totalDaysVal = prompt("Jumlah Total Hari Kerja:", "1");
+            if (!totalDaysVal || isNaN(totalDaysVal) || parseInt(totalDaysVal) <= 0) {
+                alert('Jumlah hari harus berupa angka yang valid dan lebih dari 0.');
+                return;
+            }
+
+            const reason = prompt("Alasan Cuti / Izin:", "Keperluan keluarga");
+            if (!reason) return;
+
+            const { error } = await dbClient.from('leaves').insert([{
+                employee_id: empId.trim(),
+                leave_type: leaveType.trim(),
+                start_date: startDate.trim(),
+                end_date: endDate.trim(),
+                total_days: parseInt(totalDaysVal),
+                reason: reason.trim(),
+                status: 'Pending'
+            }]);
+
+            if (error) {
+                alert('Gagal mengajukan cuti: ' + error.message);
+                return;
+            }
+
+            alert('Pengajuan cuti/izin berhasil disimpan dan berstatus Pending.');
+            initLeaveModule();
+        }
+
+        async function processLeaveApproval(leaveId, empId, leaveType, totalDays, newStatus) {
+            const currentYear = new Date().getFullYear();
+
+            if (newStatus === 'Approved' && leaveType === 'Cuti Tahunan') {
+                let { data: balanceData, error: balErr } = await dbClient
+                    .from('leave_balances')
+                    .select('*')
+                    .eq('employee_id', empId)
+                    .eq('year', currentYear)
+                    .single();
+
+                if (balErr || !balanceData) {
+                    const { data: newBal, error: insErr } = await dbClient
+                        .from('leave_balances')
+                        .insert([{ employee_id: empId, year: currentYear, total_quota: 12, used_quota: 0 }])
+                        .select()
+                        .single();
+                    
+                    if (insErr) {
+                        alert('Gagal menginisialisasi saldo cuti karyawan: ' + insErr.message);
+                        return;
+                    }
+                    balanceData = newBal;
+                }
+
+                let remaining = balanceData.total_quota - balanceData.used_quota;
+                if (totalDays > remaining) {
+                    alert(`Persetujuan ditolak: Sisa cuti tahunan pegawai hanya tersisa ${remaining} hari, sedangkan pengajuan berjumlah ${totalDays} hari.`);
+                    return;
+                }
+
+                const newUsedQuota = balanceData.used_quota + totalDays;
+                const { error: updateBalErr } = await dbClient
+                    .from('leave_balances')
+                    .update({ used_quota: newUsedQuota })
+                    .eq('employee_id', empId)
+                    .eq('year', currentYear);
+
+                if (updateBalErr) {
+                    alert('Gagal memotong saldo cuti: ' + updateBalErr.message);
+                    return;
+                }
+            }
+
+            const { error: updateLeaveErr } = await dbClient
+                .from('leaves')
+                .update({ status: newStatus, approved_by: 'HR Administrator' })
+                .eq('id', leaveId);
+
+            if (updateLeaveErr) {
+                alert('Gagal memperbarui status pengajuan: ' + updateLeaveErr.message);
+                return;
+            }
+
+            alert(`Pengajuan cuti berhasil di-${newStatus === 'Approved' ? 'setujui' : 'tolak'}!`);
+            initLeaveModule();
+        }
+
+        // ==========================================
+        // 12. DASHBOARD & ORGANISASI
         // ==========================================
         async function initDashboard() {
             const statEmp = document.getElementById('statTotalEmployees');
