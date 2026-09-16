@@ -145,6 +145,8 @@
                     initOvertimeModule();
                 } else if (moduleName === 'leave') {
                     initLeaveModule();
+                } else if (moduleName === 'leave-add') {
+                    initLeaveAddModule();
                 } else if (moduleName === 'dashboard') {
                     initDashboard();
                 }
@@ -1170,59 +1172,99 @@
             }
         }
 
-        async function openLeaveRequestModal() {
-            const empId = prompt("Masukkan ID Karyawan yang mengajukan (Contoh: EMP-0001):");
-            if (!empId) return;
+        async function initLeaveAddModule() {
+            const selectEmp = document.getElementById('selectLeaveEmployee');
+            if (!selectEmp) return;
 
-            let empExists = allEmployeesCache.find(e => e.employee_id === empId.trim());
-            if (!empExists && dbClient) {
-                const { data } = await dbClient.from('employees').select('employee_id').eq('employee_id', empId.trim()).single();
-                if (!data) {
-                    alert('ID Karyawan tidak ditemukan di sistem!');
-                    return;
-                }
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('inputLeaveStartDate').value = today;
+            document.getElementById('inputLeaveEndDate').value = today;
+
+            if (allEmployeesCache.length === 0 && dbClient) {
+                const { data } = await dbClient.from('employees').select('*').eq('status', 'Aktif');
+                allEmployeesCache = data || [];
             }
 
-            const leaveType = prompt("Pilih Jenis Cuti / Izin:\n1. Cuti Tahunan\n2. Cuti Sakit\n3. Cuti Khusus / Alasan Penting\n4. Izin Pribadi\n\n(Ketik persis nama jenis cuti/izin):", "Cuti Tahunan");
-            if (!leaveType) return;
+            selectEmp.innerHTML = `<option value="" disabled selected>-- Pilih Karyawan --</option>`;
+            const activeEmps = allEmployeesCache.filter(e => e.status === 'Aktif');
+            
+            activeEmps.forEach(emp => {
+                selectEmp.innerHTML += `<option value="${emp.employee_id}">${emp.employee_id} - ${emp.name} (${emp.department || '-'})</option>`;
+            });
+        }
 
-            const startDate = prompt("Tanggal Mulai (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-            if (!startDate) return;
+        async function updateEmployeeLeaveBalanceInfo() {
+            const selectEmp = document.getElementById('selectLeaveEmployee');
+            const infoDiv = document.getElementById('leaveBalanceInfoDisplay');
+            if (!selectEmp || !infoDiv || !dbClient) return;
 
-            const endDate = prompt("Tanggal Selesai (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-            if (!endDate) return;
+            const empId = selectEmp.value;
+            if (!empId) {
+                infoDiv.textContent = '';
+                return;
+            }
+
+            const currentYear = new Date().getFullYear();
+            const { data: balanceData, error } = await dbClient
+                .from('leave_balances')
+                .select('*')
+                .eq('employee_id', empId)
+                .eq('year', currentYear)
+                .single();
+
+            let total = 12;
+            let used = 0;
+            if (!error && balanceData) {
+                total = balanceData.total_quota;
+                used = balanceData.used_quota;
+            }
+            let remaining = total - used;
+
+            infoDiv.textContent = `Sisa Saldo Cuti Tahunan (${currentYear}): ${remaining} Hari (Total Hak: ${total}, Terpakai: ${used})`;
+        }
+
+        async function submitLeaveForm(event) {
+            event.preventDefault();
+
+            const empId = document.getElementById('selectLeaveEmployee').value;
+            const leaveType = document.getElementById('selectLeaveType').value;
+            const startDate = document.getElementById('inputLeaveStartDate').value;
+            const endDate = document.getElementById('inputLeaveEndDate').value;
+            const totalDays = parseInt(document.getElementById('inputLeaveTotalDays').value);
+            const reason = document.getElementById('inputLeaveReason').value.trim();
+
+            if (!empId) {
+                alert('Silakan pilih karyawan terlebih dahulu.');
+                return;
+            }
 
             if (new Date(endDate) < new Date(startDate)) {
                 alert('Validasi Gagal: Tanggal selesai tidak boleh lebih awal dari tanggal mulai!');
                 return;
             }
 
-            const totalDaysVal = prompt("Jumlah Total Hari Kerja:", "1");
-            if (!totalDaysVal || isNaN(totalDaysVal) || parseInt(totalDaysVal) <= 0) {
-                alert('Jumlah hari harus berupa angka yang valid dan lebih dari 0.');
+            if (isNaN(totalDays) || totalDays <= 0) {
+                alert('Jumlah hari harus berupa angka yang valid.');
                 return;
             }
 
-            const reason = prompt("Alasan Cuti / Izin:", "Keperluan keluarga");
-            if (!reason) return;
-
             const { error } = await dbClient.from('leaves').insert([{
-                employee_id: empId.trim(),
-                leave_type: leaveType.trim(),
-                start_date: startDate.trim(),
-                end_date: endDate.trim(),
-                total_days: parseInt(totalDaysVal),
-                reason: reason.trim(),
+                employee_id: empId,
+                leave_type: leaveType,
+                start_date: startDate,
+                end_date: endDate,
+                total_days: totalDays,
+                reason: reason,
                 status: 'Pending'
             }]);
 
             if (error) {
-                alert('Gagal mengajukan cuti: ' + error.message);
+                alert('Gagal menyimpan pengajuan cuti: ' + error.message);
                 return;
             }
 
-            alert('Pengajuan cuti/izin berhasil disimpan dan berstatus Pending.');
-            initLeaveModule();
+            alert('Pengajuan cuti/izin berhasil disimpan!');
+            loadModule('leave');
         }
 
         async function processLeaveApproval(leaveId, empId, leaveType, totalDays, newStatus) {

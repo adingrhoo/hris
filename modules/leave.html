@@ -65,4 +65,61 @@
             </table>
         </div>
     </div>
+
+    <!-- MODAL FORM PENGAJUAN CUTI & IZIN -->
+    <div id="leaveRequestModalOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; width: 100%; max-width: 550px; border-radius: 12px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 0;">Form Pengajuan Cuti & Izin</h3>
+                <button type="button" onclick="closeLeaveRequestModal()" style="background: none; border: none; font-size: 1.25rem; color: #64748b; cursor: pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="formSubmitLeave" onsubmit="submitLeaveRequest(event)">
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Cari & Pilih Karyawan</label>
+                    <input type="text" id="leaveSearchEmployee" placeholder="Ketik nama atau ID karyawan..." oninput="filterLeaveEmployeeList()" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; margin-bottom: 8px; box-sizing: border-box;">
+                    <select id="leaveEmployeeSelect" required size="4" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; background: #f8fafc;" onchange="onLeaveEmployeeSelected()">
+                        <!-- Options populated dynamically -->
+                    </select>
+                    <div id="leaveEmployeeBalanceInfo" style="margin-top: 6px; font-size: 0.85rem; font-weight: 600; color: #0284c7;"></div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jenis Cuti / Izin</label>
+                    <select id="leaveTypeInput" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; background: white;" required>
+                        <option value="Cuti Tahunan">Cuti Tahunan</option>
+                        <option value="Cuti Sakit">Cuti Sakit</option>
+                        <option value="Cuti Khusus / Alasan Penting">Cuti Khusus / Alasan Penting</option>
+                        <option value="Izin Pribadi">Izin Pribadi</option>
+                        <option value="Cuti Melahirkan">Cuti Melahirkan</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Mulai</label>
+                        <input type="date" id="leaveStartDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Tanggal Selesai</label>
+                        <input type="date" id="leaveEndDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Jumlah Hari Kerja</label>
+                    <input type="number" id="leaveTotalDays" min="1" value="1" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
+                </div>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 6px;">Alasan Cuti / Izin</label>
+                    <textarea id="leaveReasonInput" rows="3" placeholder="Masukkan alasan pengajuan cuti atau izin..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button type="button" onclick="closeLeaveRequestModal()" style="padding: 10px 16px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Batal</button>
+                    <button type="submit" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Simpan Pengajuan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
