@@ -32,21 +32,21 @@
                 <div id="leaveTypeDropdownContainer" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 8px; margin-top: 4px; max-height: 220px; overflow-y: auto; z-index: 50; box-shadow: 0 4px 12px rgba(0,0,0,0.08);"></div>
             </div>
 
-            <!-- Tanggal Mulai & Selesai -->
+            <!-- Tanggal Mulai & Selesai (Auto Calculate Days) -->
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
                 <div>
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 8px;">Tanggal Mulai</label>
-                    <input type="date" id="inputLeaveStartDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
+                    <input type="date" id="inputLeaveStartDate" onchange="calculateLeaveDays()" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 8px;">Tanggal Selesai</label>
-                    <input type="date" id="inputLeaveEndDate" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
+                    <input type="date" id="inputLeaveEndDate" onchange="calculateLeaveDays()" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
                 </div>
             </div>
 
             <!-- Jumlah Hari -->
             <div style="margin-bottom: 20px;">
-                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 8px;">Jumlah Total Hari Kerja</label>
+                <label style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 8px;">Jumlah Total Hari Kerja (Auto / Sesuai Tanggal)</label>
                 <input type="number" id="inputLeaveTotalDays" min="1" value="1" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; box-sizing: border-box;" required>
             </div>
 
@@ -64,13 +64,12 @@
         </form>
     </div>
 
-    <!-- STEP 2: REVIEW & SUMMARY CARD (Awalnya Disembunyikan) -->
+    <!-- STEP 2: REVIEW & SUMMARY CARD -->
     <div id="leaveFormStep2" style="display: none; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
         <h2 style="font-size: 1.15rem; font-weight: 700; color: #1e293b; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
             <i class="fa-solid fa-clipboard-check" style="color: #0284c7; margin-right: 8px;"></i> Review Ringkasan Pengajuan Cuti
         </h2>
 
-        <!-- Detail Data yang Diajukan -->
         <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0;">
             <table style="width: 100%; font-size: 0.875rem; border-collapse: collapse;">
                 <tr>
@@ -96,12 +95,8 @@
             </table>
         </div>
 
-        <!-- Detail Saldo Cuti & Hasil Validasi -->
-        <div id="reviewBalanceBox" style="border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid #cbd5e1; background: #f1f5f9;">
-            <!-- Dimuat dinamis -->
-        </div>
+        <div id="reviewBalanceBox" style="border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid #cbd5e1; background: #f1f5f9;"></div>
 
-        <!-- Tombol Aksi Step 2 -->
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <button type="button" onclick="backToLeaveFormStep1()" style="padding: 10px 18px; background: #f1f5f9; color: #475569; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
                 <i class="fa-solid fa-pen-to-square"></i> Edit Kembali

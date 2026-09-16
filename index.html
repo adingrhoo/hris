@@ -1187,6 +1187,7 @@
             const endDateEl = document.getElementById('inputLeaveEndDate');
             if (startDateEl) startDateEl.value = today;
             if (endDateEl) endDateEl.value = today;
+            calculateLeaveDays();
 
             if (allEmployeesCache.length === 0 && dbClient) {
                 const { data } = await dbClient.from('employees').select('*').eq('status', 'Aktif');
@@ -1209,6 +1210,25 @@
                     typeContainer.style.display = 'none';
                 }
             });
+        }
+
+        // Auto Calculate Days from Dates
+        function calculateLeaveDays() {
+            const startStr = document.getElementById('inputLeaveStartDate').value;
+            const endStr = document.getElementById('inputLeaveEndDate').value;
+            const totalDaysInput = document.getElementById('inputLeaveTotalDays');
+            
+            if (startStr && endStr && totalDaysInput) {
+                const start = new Date(startStr);
+                const end = new Date(endStr);
+                if (end >= start) {
+                    const diffTime = Math.abs(end - start);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                    totalDaysInput.value = diffDays;
+                } else {
+                    totalDaysInput.value = 1;
+                }
+            }
         }
 
         function toggleEmployeeDropdown(show) {
@@ -1292,7 +1312,7 @@
             renderLeaveTypeDropdownOptions(filtered);
         }
 
-        // --- STEP 1: PROCEED TO REVIEW ---
+        // --- STEP 1: PROCEED TO REVIEW WITH DATE MATCH VALIDATION ---
         async function proceedToLeaveReview(event) {
             event.preventDefault();
 
@@ -1319,6 +1339,16 @@
                 return;
             }
 
+            // Validasi Match Tanggal vs Durasi Hari
+            const startObj = new Date(startDate);
+            const endObj = new Date(endDate);
+            const calculatedDays = Math.round(Math.abs(endObj - startObj) / (1000 * 60 * 60 * 24)) + 1;
+
+            if (totalDays !== calculatedDays) {
+                alert(`Validasi Gagal: Jumlah hari (${totalDays} hari) tidak match/sesuai dengan rentang tanggal ${startDate} s/d ${endDate} (${calculatedDays} hari).`);
+                return;
+            }
+
             if (isNaN(totalDays) || totalDays <= 0) {
                 alert('Jumlah hari harus berupa angka yang valid.');
                 return;
@@ -1337,11 +1367,9 @@
 
             balanceBox.innerHTML = `<div style="color: #64748b; font-size: 0.875rem;">Memeriksa saldo cuti karyawan di database...</div>`;
             
-            // Switch tampilan ke Step 2
             document.getElementById('leaveFormStep1').style.display = 'none';
             document.getElementById('leaveFormStep2').style.display = 'block';
 
-            // Ambil data saldo cuti karyawan terpilih
             let total = 12;
             let used = 0;
             if (dbClient) {
