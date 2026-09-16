@@ -964,7 +964,15 @@
         }
 
         async function confirmAndUploadOvertime() {
-            const validData = parsedOvertimeUploadData.filter(d => d.isValid);
+            const validData = parsedOvertimeUploadData
+                .filter(d => d.isValid)
+                .map(d => ({
+                    employee_id: d.employee_id,
+                    date: d.date,
+                    hours: d.hours,
+                    notes: d.notes
+                }));
+
             if (validData.length === 0) {
                 alert('Tidak ada data valid untuk diunggah.');
                 return;
