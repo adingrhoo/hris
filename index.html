@@ -1212,19 +1212,29 @@
             });
         }
 
-        // Auto Calculate Days from Dates
+        // Auto Calculate Working Days (Excluding Weekends: Saturday & Sunday)
         function calculateLeaveDays() {
             const startStr = document.getElementById('inputLeaveStartDate').value;
             const endStr = document.getElementById('inputLeaveEndDate').value;
             const totalDaysInput = document.getElementById('inputLeaveTotalDays');
             
             if (startStr && endStr && totalDaysInput) {
-                const start = new Date(startStr);
-                const end = new Date(endStr);
+                let start = new Date(startStr);
+                let end = new Date(endStr);
+                
                 if (end >= start) {
-                    const diffTime = Math.abs(end - start);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                    totalDaysInput.value = diffDays;
+                    let workingDays = 0;
+                    let currentDate = new Date(start);
+                    
+                    while (currentDate <= end) {
+                        const dayOfWeek = currentDate.getDay();
+                        // 0 = Minggu (Sunday), 6 = Sabtu (Saturday)
+                        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+                            workingDays++;
+                        }
+                        currentDate.setDate(currentDate.getDate() + 1);
+                    }
+                    totalDaysInput.value = workingDays > 0 ? workingDays : 1;
                 } else {
                     totalDaysInput.value = 1;
                 }
@@ -1312,7 +1322,7 @@
             renderLeaveTypeDropdownOptions(filtered);
         }
 
-        // --- STEP 1: PROCEED TO REVIEW WITH DATE MATCH VALIDATION ---
+        // --- STEP 1: PROCEED TO REVIEW WITH WORKING DAYS VALIDATION ---
         async function proceedToLeaveReview(event) {
             event.preventDefault();
 
@@ -1339,13 +1349,19 @@
                 return;
             }
 
-            // Validasi Match Tanggal vs Durasi Hari
-            const startObj = new Date(startDate);
-            const endObj = new Date(endDate);
-            const calculatedDays = Math.round(Math.abs(endObj - startObj) / (1000 * 60 * 60 * 24)) + 1;
+            // Hitung ulang hari kerja efektif (mengabaikan Sabtu & Minggu) untuk validasi
+            let startObj = new Date(startDate);
+            let endObj = new Date(endDate);
+            let calculatedWorkingDays = 0;
+            let tempDate = new Date(startObj);
+            while (tempDate <= endObj) {
+                let d = tempDate.getDay();
+                if (d !== 0 && d !== 6) calculatedWorkingDays++;
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
 
-            if (totalDays !== calculatedDays) {
-                alert(`Validasi Gagal: Jumlah hari (${totalDays} hari) tidak match/sesuai dengan rentang tanggal ${startDate} s/d ${endDate} (${calculatedDays} hari).`);
+            if (totalDays !== calculatedWorkingDays) {
+                alert(`Validasi Gagal: Jumlah hari kerja (${totalDays} hari) tidak sesuai dengan rentang tanggal ${startDate} s/d ${endDate} (${calculatedWorkingDays} hari kerja efektif di luar Sabtu & Minggu).`);
                 return;
             }
 
@@ -1396,7 +1412,7 @@
                             <i class="fa-solid fa-triangle-exclamation"></i> DITOLAK / GAGAL: MELEBIHI KUOTA CUTI
                         </div>
                         <div style="font-size: 0.875rem; color: #7f1d1d;">
-                            Pegawai ini mengajukan <strong>${totalDays} hari</strong>, namun sisa saldo cuti tahunan (${currentYear}) hanya tersisa <strong>${remaining} hari</strong> (Total Hak: ${total}, Terpakai: ${used}). Pengajuan tidak dapat dilanjutkan.
+                            Pegawai ini mengajukan <strong>${totalDays} hari kerja</strong>, namun sisa saldo cuti tahunan (${currentYear}) hanya tersisa <strong>${remaining} hari</strong> (Total Hak: ${total}, Terpakai: ${used}). Pengajuan tidak dapat dilanjutkan.
                         </div>
                     `;
                     btnConfirm.disabled = true;
@@ -1410,7 +1426,7 @@
                             <i class="fa-solid fa-circle-check"></i> STATUS VALID: SALDO CUTI MENCUKUPI
                         </div>
                         <div style="font-size: 0.875rem; color: #14532d;">
-                            Sisa saldo cuti tahunan (${currentYear}): <strong>${remaining} hari</strong> dari total hak ${total} hari (Terpakai: ${used}). Pengajuan ${totalDays} hari dapat disetujui.
+                            Sisa saldo cuti tahunan (${currentYear}): <strong>${remaining} hari</strong> dari total hak ${total} hari (Terpakai: ${used}). Pengajuan ${totalDays} hari kerja dapat disetujui.
                         </div>
                     `;
                     btnConfirm.disabled = false;
@@ -1525,7 +1541,6 @@
             initLeaveModule();
         }
 
-        // Fungsi fallback/jembatan pengaman untuk mencegah error ReferenceError jika cache memanggil fungsi lama
         function openLeaveRequestModal() {
             loadModule('leave-add');
         }
