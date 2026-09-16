@@ -679,7 +679,7 @@
                 const emp = item.employees || {};
                 const name = emp.name || 'Tidak Diketahui';
                 const dept = emp.department || '-';
-                const empId = item.employee_id || '-'; // Employee ID dipindah menggantikan NIK
+                const empId = item.employee_id || '-';
                 
                 let badgeStyle = 'background: #f1f5f9; color: #475569;';
                 if (item.status === 'Hadir') badgeStyle = 'background: #dcfce7; color: #15803d;';
@@ -711,6 +711,16 @@
             });
         }
 
+        // Helper untuk otomatis melengkapi format HH:MM menjadi HH:MM:00 jika detik tidak diisi
+        function formatTimeInput(timeStr) {
+            if (!timeStr) return null;
+            timeStr = timeStr.trim();
+            if (/^\d{2}:\d{2}$/.test(timeStr)) {
+                return timeStr + ':00';
+            }
+            return timeStr;
+        }
+
         async function openAttendanceEdit(id) {
             if (!dbClient) return;
 
@@ -723,8 +733,14 @@
             const newStatus = prompt("Ubah Status Kehadiran (Hadir, Terlambat, Cuti, Izin, Alpha):", data.status);
             if (newStatus === null) return;
 
-            const newClockIn = prompt("Ubah Jam Masuk (HH:MM:SS format atau kosongkan):", data.clock_in || '');
-            const newClockOut = prompt("Ubah Jam Pulang (HH:MM:SS format atau kosongkan):", data.clock_out || '');
+            const rawClockIn = prompt("Ubah Jam Masuk (Cukup ketik 07:34 atau 07:34:00):", data.clock_in || '');
+            if (rawClockIn === null) return;
+            const newClockIn = formatTimeInput(rawClockIn);
+
+            const rawClockOut = prompt("Ubah Jam Pulang (Cukup ketik 17:00 atau 17:00:00):", data.clock_out || '');
+            if (rawClockOut === null) return;
+            const newClockOut = formatTimeInput(rawClockOut);
+
             const newOvertime = prompt("Ubah Jam Lembur (angka, misal 1.5):", data.overtime_hours || 0);
             const newNotes = prompt("Catatan HR / Alasan Koreksi:", data.notes || '');
 
@@ -732,10 +748,10 @@
                 .from('attendance')
                 .update({
                     status: newStatus.trim(),
-                    clock_in: newClockIn.trim() !== '' ? newClockIn.trim() : null,
-                    clock_out: newClockOut.trim() !== '' ? newClockOut.trim() : null,
+                    clock_in: newClockIn,
+                    clock_out: newClockOut,
                     overtime_hours: newOvertime ? parseFloat(newOvertime) : 0,
-                    notes: newNotes.trim()
+                    notes: newNotes ? newNotes.trim() : ''
                 })
                 .eq('id', id);
 
