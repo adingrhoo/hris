@@ -781,7 +781,6 @@
                 return;
             }
 
-            // AUTO-FETCH CACHE KARYAWAN JIKA KOSONG (AGAR VALIDASI SELALU SIAP)
             if (allEmployeesCache.length === 0) {
                 const { data: empData } = await dbClient.from('employees').select('*');
                 allEmployeesCache = empData || [];
@@ -895,7 +894,21 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            // PASTIKAN CACHE KARYAWAN TERISI SEBELUM MEMBACA FILE CSV
+            // Reset state sinkron seketika file dipilih untuk menutup celah data lama terbawa
+            parsedOvertimeUploadData = [];
+            const previewCard = document.getElementById('uploadPreviewCard');
+            const previewBody = document.getElementById('previewOvertimeTableBody');
+            const btnConfirm = document.getElementById('btnConfirmUpload');
+
+            if (previewBody) {
+                previewBody.innerHTML = `<tr><td colspan="5" style="padding: 12px; text-align: center; color: #64748b;">Memproses dan memvalidasi file baru...</td></tr>`;
+            }
+            if (previewCard) previewCard.style.display = 'block';
+            if (btnConfirm) {
+                btnConfirm.disabled = true;
+                btnConfirm.style.background = '#94a3b8';
+            }
+
             if (allEmployeesCache.length === 0 && dbClient) {
                 const { data: empData } = await dbClient.from('employees').select('*');
                 allEmployeesCache = empData || [];
@@ -906,14 +919,10 @@
                 const text = e.target.result;
                 const rows = text.split('\n').map(r => r.trim()).filter(r => r.length > 0);
                 
-                const previewBody = document.getElementById('previewOvertimeTableBody');
-                const previewCard = document.getElementById('uploadPreviewCard');
-                const btnConfirm = document.getElementById('btnConfirmUpload');
                 if (!previewBody) return;
-
                 previewBody.innerHTML = '';
-                parsedOvertimeUploadData = [];
                 let hasError = false;
+                let seenRowsInFile = new Set(); // Set untuk deteksi duplikasi dalam file CSV
 
                 let startIndex = rows[0].toLowerCase().includes('employee_id') ? 1 : 0;
 
@@ -925,6 +934,8 @@
                     let statusHtml = '<span style="color: #16a34a; font-weight: 600;">Valid</span>';
                     let isValid = true;
 
+                    const rowKey = `${empId}_${dateStr}`;
+
                     let foundEmp = allEmployeesCache.find(e => e.employee_id === empId);
                     if (!foundEmp) {
                         statusHtml = '<span style="color: #dc2626; font-weight: 600;">Error: ID Karyawan tidak ditemukan</span>';
@@ -935,6 +946,13 @@
                         statusHtml = '<span style="color: #dc2626; font-weight: 600;">Error: Jam lembur tidak valid</span>';
                         isValid = false;
                         hasError = true;
+                    }
+                    else if (seenRowsInFile.has(rowKey)) {
+                        statusHtml = '<span style="color: #dc2626; font-weight: 600;">Error: Duplikasi data di tanggal yang sama dalam file</span>';
+                        isValid = false;
+                        hasError = true;
+                    } else {
+                        seenRowsInFile.add(rowKey);
                     }
 
                     parsedOvertimeUploadData.push({
@@ -956,7 +974,11 @@
                     `;
                 }
 
-                previewCard.style.display = 'block';
+                if (parsedOvertimeUploadData.length === 0) {
+                    previewBody.innerHTML = `<tr><td colspan="5" style="padding: 12px; text-align: center; color: #dc2626;">File CSV kosong atau format tidak sesuai.</td></tr>`;
+                    hasError = true;
+                }
+
                 if (hasError) {
                     btnConfirm.disabled = true;
                     btnConfirm.style.background = '#94a3b8';
