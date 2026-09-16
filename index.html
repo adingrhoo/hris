@@ -137,6 +137,8 @@
                     initOrganizationAdd();
                 } else if (moduleName === 'employees') {
                     fetchEmployeesFromSupabase();
+                } else if (moduleName === 'employee-add') {
+                    initEmployeeAdd();
                 } else if (moduleName === 'employee-edit') {
                     initEmployeeEdit();
                 } else if (moduleName === 'attendance') {
@@ -254,22 +256,74 @@
         }
 
         // ==========================================
-        // 5. TAMBAH KARYAWAN BARU (DENGAN AUTO-GENERATE EMPLOYEE_ID)
+        // 5. GENERATE & PREVIEW ID KARYAWAN OTOMATIS
+        // ==========================================
+        async function initEmployeeAdd() {
+            const inputDisplayId = document.getElementById('displayGeneratedEmpId');
+            if (!inputDisplayId || !dbClient) return;
+
+            let generatedEmpId = 'EMP-0001';
+            const { data: lastEmp, error } = await dbClient
+                .from('employees')
+                .select('employee_id')
+                .order('id', { ascending: false })
+                .limit(1);
+
+            if (!error && lastEmp && lastEmp.length > 0 && lastEmp[0].employee_id) {
+                let parts = lastEmp[0].employee_id.split('-');
+                if (parts.length > 1) {
+                    let nextNumber = parseInt(parts[1], 10) + 1;
+                    generatedEmpId = 'EMP-' + String(nextNumber).padStart(4, '0');
+                }
+            }
+
+            inputDisplayId.value = generatedEmpId;
+        }
+
+        // ==========================================
+        // 6. TAMBAH KARYAWAN BARU KE SUPABASE
         // ==========================================
         document.addEventListener('submit', async function(e) {
             if (e.target && e.target.id === 'formAddEmployee') {
                 e.preventDefault();
+                
+                const displayIdElem = document.getElementById('displayGeneratedEmpId');
+                const employeeIdToSave = displayIdElem ? displayIdElem.value.trim() : 'EMP-0001';
+
                 const inputNik = document.getElementById('inputNik');
                 const inputNama = document.getElementById('inputNama');
-                const inputEmailPerusahaan = document.getElementById('inputEmailPerusahaan');
+                const inputJenisKelamin = document.getElementById('inputJenisKelamin');
+                const inputTempatLahir = document.getElementById('inputTempatLahir');
+                const inputTanggalLahir = document.getElementById('inputTanggalLahir');
+                const inputAgama = document.getElementById('inputAgama');
+                const inputAlamat = document.getElementById('inputAlamat');
                 const inputTelp = document.getElementById('inputTelp');
+                const inputEmailPribadi = document.getElementById('inputEmailPribadi');
+                
+                const inputDaruratNama = document.getElementById('inputDaruratNama');
+                const inputDaruratHubungan = document.getElementById('inputDaruratHubungan');
                 const inputDaruratTelp = document.getElementById('inputDaruratTelp');
+
                 const inputJenisKontrak = document.getElementById('inputJenisKontrak');
-                const inputEndDate = document.getElementById('inputEndDate');
                 const inputJoinDate = document.getElementById('inputJoinDate');
-                const inputIpk = document.getElementById('inputIpk');
+                const inputEndDate = document.getElementById('inputEndDate');
                 const inputDivisi = document.getElementById('inputDivisi');
+                const inputAtasan = document.getElementById('inputAtasan');
+                const inputLokasi = document.getElementById('inputLokasi');
+                const inputEmailPerusahaan = document.getElementById('inputEmailPerusahaan');
+
+                const inputPendidikanTerakhir = document.getElementById('inputPendidikanTerakhir');
+                const inputTahunMasuk = document.getElementById('inputTahunMasuk');
+                const inputUniversitas = document.getElementById('inputUniversitas');
                 const inputJurusan = document.getElementById('inputJurusan');
+                const inputIpk = document.getElementById('inputIpk');
+
+                const inputBankNama = document.getElementById('inputBankNama');
+                const inputBankNo = document.getElementById('inputBankNo');
+                const inputBankPemilik = document.getElementById('inputBankPemilik');
+                const inputBpjs = document.getElementById('inputBpjs');
+                const inputNpwp = document.getElementById('inputNpwp');
+                const inputPtkp = document.getElementById('inputPtkp');
 
                 if (inputNik && inputNik.value.length !== 16) {
                     alert('NIK wajib diisi tepat 16 digit angka.');
@@ -282,54 +336,62 @@
                     return;
                 }
 
-                // Auto-generate employee_id (EMP-XXXX)
-                let generatedEmpId = 'EMP-0001';
-                const { data: lastEmp } = await dbClient
-                    .from('employees')
-                    .select('employee_id')
-                    .order('employee_id', { ascending: false })
-                    .limit(1);
+                const payload = {
+                    employee_id: employeeIdToSave,
+                    nik: inputNik ? inputNik.value.trim() : null,
+                    name: inputNama ? inputNama.value.trim() : null,
+                    jenis_kelamin: inputJenisKelamin ? inputJenisKelamin.value : null,
+                    tempat_lahir: inputTempatLahir ? inputTempatLahir.value.trim() : null,
+                    tanggal_lahir: inputTanggalLahir && inputTanggalLahir.value ? inputTanggalLahir.value : null,
+                    agama: inputAgama ? inputAgama.value : null,
+                    alamat: inputAlamat ? inputAlamat.value.trim() : null,
+                    telepon: inputTelp ? inputTelp.value.trim() : null,
+                    email_pribadi: inputEmailPribadi ? inputEmailPribadi.value.trim() : null,
+                    
+                    kontak_darurat_nama: inputDaruratNama ? inputDaruratNama.value.trim() : null,
+                    kontak_darurat_hubungan: inputDaruratHubungan ? inputDaruratHubungan.value : null,
+                    kontak_darurat_telepon: inputDaruratTelp ? inputDaruratTelp.value.trim() : null,
 
-                if (lastEmp && lastEmp.length > 0 && lastEmp[0].employee_id) {
-                    let parts = lastEmp[0].employee_id.split('-');
-                    if (parts.length > 1) {
-                        let nextNumber = parseInt(parts[1], 10) + 1;
-                        generatedEmpId = 'EMP-' + String(nextNumber).padStart(4, '0');
-                    }
-                }
+                    jenis_kontrak: inputJenisKontrak ? inputJenisKontrak.value : null,
+                    join_date: inputJoinDate && inputJoinDate.value ? inputJoinDate.value : null,
+                    end_date: inputEndDate && inputEndDate.value ? inputEndDate.value : null,
+                    department: inputDivisi ? inputDivisi.value : null,
+                    atasan: inputAtasan ? inputAtasan.value.trim() : null,
+                    lokasi: inputLokasi ? inputLokasi.value.trim() : null,
+                    email: inputEmailPerusahaan ? inputEmailPerusahaan.value.trim() : null,
+
+                    pendidikan_terakhir: inputPendidikanTerakhir ? inputPendidikanTerakhir.value : null,
+                    tahun_masuk: inputTahunMasuk && inputTahunMasuk.value ? parseInt(inputTahunMasuk.value) : null,
+                    universitas: inputUniversitas ? inputUniversitas.value.trim() : null,
+                    jurusan: inputJurusan ? inputJurusan.value.trim() : null,
+                    ipk: inputIpk && inputIpk.value !== '' ? parseFloat(inputIpk.value) : null,
+                    position: inputJurusan && inputJurusan.value ? inputJurusan.value.trim() + ' Graduate' : 'Staff',
+
+                    bank_nama: inputBankNama ? inputBankNama.value.trim() : null,
+                    bank_no: inputBankNo ? inputBankNo.value.trim() : null,
+                    bank_pemilik: inputBankPemilik ? inputBankPemilik.value.trim() : null,
+                    bpjs: inputBpjs ? inputBpjs.value.trim() : null,
+                    npwp: inputNpwp ? inputNpwp.value.trim() : null,
+                    ptkp: inputPtkp ? inputPtkp.value : null,
+                    status: 'Aktif'
+                };
 
                 const { error: insertError } = await dbClient
                     .from('employees')
-                    .insert([
-                        {
-                            employee_id: generatedEmpId,
-                            nik: inputNik ? inputNik.value.trim() : null,
-                            name: inputNama ? inputNama.value.trim() : null,
-                            email: inputEmailPerusahaan ? inputEmailPerusahaan.value.trim() : null,
-                            telepon: inputTelp ? inputTelp.value.trim() : null,
-                            kontak_darurat_telepon: inputDaruratTelp ? inputDaruratTelp.value.trim() : null,
-                            jenis_kontrak: inputJenisKontrak ? inputJenisKontrak.value : null,
-                            join_date: inputJoinDate && inputJoinDate.value ? inputJoinDate.value : null,
-                            end_date: inputEndDate && inputEndDate.value ? inputEndDate.value : null,
-                            ipk: inputIpk && inputIpk.value !== '' ? parseFloat(inputIpk.value) : null,
-                            department: inputDivisi ? inputDivisi.value : null,
-                            position: inputJurusan ? inputJurusan.value.trim() + ' Graduate' : 'Staff',
-                            status: 'Aktif'
-                        }
-                    ]);
+                    .insert([payload]);
 
                 if (insertError) {
                     alert('Gagal menyimpan data karyawan: ' + insertError.message);
                     return;
                 }
 
-                alert(`Karyawan baru berhasil ditambahkan dengan ID: ${generatedEmpId}`);
+                alert(`Karyawan baru berhasil ditambahkan dengan ID: ${employeeIdToSave}`);
                 loadModule('employees');
             }
         });
 
         // ==========================================
-        // 6. CORE HR: FETCH & PENCARIAN KARYAWAN
+        // 7. CORE HR: FETCH & PENCARIAN KARYAWAN
         // ==========================================
         async function fetchEmployeesFromSupabase() {
             const tbody = document.getElementById('employeeTableBody');
@@ -429,7 +491,7 @@
         }
 
         // ==========================================
-        // 7. EDIT KARYAWAN
+        // 8. EDIT KARYAWAN
         // ==========================================
         function editEmployee(id) {
             sessionStorage.setItem('activeEditEmployeeId', id);
@@ -559,7 +621,7 @@
         }
 
         // ==========================================
-        // 8. MODUL KEHADIRAN (ATTENDANCE) & HR OVERRIDE
+        // 9. MODUL KEHADIRAN (ATTENDANCE) & HR OVERRIDE
         // ==========================================
         async function initAttendanceModule() {
             const dateInput = document.getElementById('filterAttendanceDate');
@@ -681,7 +743,7 @@
         }
 
         // ==========================================
-        // 9. DASHBOARD & ORGANISASI
+        // 10. DASHBOARD & ORGANISASI
         // ==========================================
         async function initDashboard() {
             const statEmp = document.getElementById('statTotalEmployees');
