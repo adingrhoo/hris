@@ -23,6 +23,7 @@
                 <li data-module="employees"><a href="#"><i class="fa-solid fa-user-group"></i> Karyawan (Core HR)</a></li>
                 <li data-module="organization"><a href="#"><i class="fa-solid fa-sitemap"></i> Organisasi</a></li>
                 <li data-module="attendance"><a href="#"><i class="fa-solid fa-calendar-check"></i> Kehadiran</a></li>
+                <li data-module="overtime"><a href="#"><i class="fa-solid fa-business-time"></i> Lembur (Overtime)</a></li>
                 <li data-module="leave"><a href="#"><i class="fa-solid fa-person-walking-luggage"></i> Cuti & Izin</a></li>
                 <li data-module="approval"><a href="#"><i class="fa-solid fa-list-check"></i> Pusat Approval</a></li>
                 <li data-module="analytics"><a href="#"><i class="fa-solid fa-chart-pie"></i> Analitik & Laporan</a></li>
@@ -143,6 +144,8 @@
                     initEmployeeEdit();
                 } else if (moduleName === 'attendance') {
                     initAttendanceModule();
+                } else if (moduleName === 'overtime') {
+                    initOvertimeModule();
                 } else if (moduleName === 'dashboard') {
                     initDashboard();
                 }
@@ -626,7 +629,6 @@
         async function initAttendanceModule() {
             const dateInput = document.getElementById('filterAttendanceDate');
             
-            // Otomatis set ke tanggal hari ini jika belum ada nilai
             const todayStr = new Date().toISOString().split('T')[0];
             if (dateInput && !dateInput.value) {
                 dateInput.value = todayStr;
@@ -711,7 +713,6 @@
             });
         }
 
-        // Helper untuk otomatis melengkapi format HH:MM menjadi HH:MM:00 jika detik tidak diisi
         function formatTimeInput(timeStr) {
             if (!timeStr) return null;
             timeStr = timeStr.trim();
@@ -765,7 +766,223 @@
         }
 
         // ==========================================
-        // 10. DASHBOARD & ORGANISASI
+        // 10. MODUL LEMBUR (OVERTIME) & UPLOAD VALIDASI
+        // ==========================================
+        let parsedOvertimeUploadData = [];
+
+        async function initOvertimeModule() {
+            const tbody = document.getElementById('overtimeTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Memuat data lembur...</td></tr>`;
+
+            if (!dbClient) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #ef4444;">Klien database belum terinisialisasi.</td></tr>`;
+                return;
+            }
+
+            const { data, error } = await dbClient
+                .from('overtime')
+                .select(`
+                    id,
+                    employee_id,
+                    date,
+                    hours,
+                    notes,
+                    employees (name, department)
+                `)
+                .order('date', { ascending: false });
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #ef4444;">Gagal memuat data lembur: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 24px; text-align: center; color: #64748b;">Belum ada catatan lembur.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const emp = item.employees || {};
+                const name = emp.name || 'Tidak Diketahui';
+                const dept = emp.department || '-';
+                const empId = item.employee_id || '-';
+
+                tbody.innerHTML += `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 14px 20px;">
+                            <div style="font-weight: 600; color: #1e293b;">${name}</div>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #0369a1; margin-top: 2px;">${empId}</div>
+                        </td>
+                        <td style="padding: 14px 20px; color: #334155;">${dept}</td>
+                        <td style="padding: 14px 20px; color: #334155;">${item.date}</td>
+                        <td style="padding: 14px 20px; font-weight: 600; color: #b45309;">${item.hours} Jam</td>
+                        <td style="padding: 14px 20px; color: #64748b; font-size: 0.85rem;">${item.notes || '-'}</td>
+                        <td style="padding: 14px 20px; text-align: center;">
+                            <button onclick="deleteOvertime('${item.id}')" style="padding: 6px 10px; background: #fee2e2; color: #991b1b; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.8rem;" title="Hapus Data">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function openManualOvertimeModal() {
+            const empId = prompt("Masukkan ID Karyawan (Contoh: EMP-0001):");
+            if (!empId) return;
+
+            let empExists = allEmployeesCache.find(e => e.employee_id === empId.trim());
+            if (!empExists && dbClient) {
+                const { data } = await dbClient.from('employees').select('employee_id').eq('employee_id', empId.trim()).single();
+                if (!data) {
+                    alert('ID Karyawan tidak ditemukan di sistem!');
+                    return;
+                }
+            }
+
+            const dateStr = prompt("Masukkan Tanggal Lembur (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+            if (!dateStr) return;
+
+            const hoursVal = prompt("Masukkan Jumlah Jam Lembur (angka, misal 2.5):");
+            if (!hoursVal || isNaN(hoursVal)) {
+                alert('Jumlah jam lembur harus berupa angka yang valid.');
+                return;
+            }
+
+            const notesVal = prompt("Catatan / Keterangan Lembur:", "Lembur operasional proyek");
+
+            const { error } = await dbClient.from('overtime').insert([{
+                employee_id: empId.trim(),
+                date: dateStr.trim(),
+                hours: parseFloat(hoursVal),
+                notes: notesVal ? notesVal.trim() : ''
+            }]);
+
+            if (error) {
+                if (error.code === '23505') {
+                    alert('Peringatan Duplikasi: Pegawai ini sudah memiliki catatan lembur pada tanggal tersebut!');
+                } else {
+                    alert('Gagal menyimpan data lembur: ' + error.message);
+                }
+                return;
+            }
+
+            alert('Data lembur berhasil ditambahkan!');
+            initOvertimeModule();
+        }
+
+        async function deleteOvertime(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus catatan lembur ini?')) return;
+            const { error } = await dbClient.from('overtime').delete().eq('id', id);
+            if (error) {
+                alert('Gagal menghapus: ' + error.message);
+                return;
+            }
+            alert('Data lembur berhasil dihapus.');
+            initOvertimeModule();
+        }
+
+        function previewOvertimeCsv(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                const rows = text.split('\n').map(r => r.trim()).filter(r => r.length > 0);
+                
+                const previewBody = document.getElementById('previewOvertimeTableBody');
+                const previewCard = document.getElementById('uploadPreviewCard');
+                const btnConfirm = document.getElementById('btnConfirmUpload');
+                if (!previewBody) return;
+
+                previewBody.innerHTML = '';
+                parsedOvertimeUploadData = [];
+                let hasError = false;
+
+                let startIndex = rows[0].toLowerCase().includes('employee_id') ? 1 : 0;
+
+                for (let i = startIndex; i < rows.length; i++) {
+                    const cols = rows[i].split(',').map(c => c.trim());
+                    if (cols.length < 3) continue;
+
+                    const [empId, dateStr, hoursStr, notesStr] = cols;
+                    let statusHtml = '<span style="color: #16a34a; font-weight: 600;">Valid</span>';
+                    let isValid = true;
+
+                    let foundEmp = allEmployeesCache.find(e => e.employee_id === empId);
+                    if (!foundEmp) {
+                        statusHtml = '<span style="color: #dc2626; font-weight: 600;">Error: ID Karyawan tidak ditemukan</span>';
+                        isValid = false;
+                        hasError = true;
+                    } 
+                    else if (isNaN(hoursStr) || parseFloat(hoursStr) <= 0) {
+                        statusHtml = '<span style="color: #dc2626; font-weight: 600;">Error: Jam lembur tidak valid</span>';
+                        isValid = false;
+                        hasError = true;
+                    }
+
+                    parsedOvertimeUploadData.push({
+                        employee_id: empId,
+                        date: dateStr,
+                        hours: parseFloat(hoursStr),
+                        notes: notesStr || '',
+                        isValid: isValid
+                    });
+
+                    previewBody.innerHTML += `
+                        <tr style="border-bottom: 1px solid #e2e8f0;">
+                            <td style="padding: 8px 14px;">${empId}</td>
+                            <td style="padding: 8px 14px;">${dateStr}</td>
+                            <td style="padding: 8px 14px;">${hoursStr}</td>
+                            <td style="padding: 8px 14px;">${notesStr || '-'}</td>
+                            <td style="padding: 8px 14px;">${statusHtml}</td>
+                        </tr>
+                    `;
+                }
+
+                previewCard.style.display = 'block';
+                if (hasError) {
+                    btnConfirm.disabled = true;
+                    btnConfirm.style.background = '#94a3b8';
+                    btnConfirm.title = 'Perbaiki data yang error pada file sebelum mengonfirmasi';
+                } else {
+                    btnConfirm.disabled = false;
+                    btnConfirm.style.background = '#059669';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function cancelOvertimeUpload() {
+            document.getElementById('uploadPreviewCard').style.display = 'none';
+            document.getElementById('overtimeCsvFile').value = '';
+            parsedOvertimeUploadData = [];
+        }
+
+        async function confirmAndUploadOvertime() {
+            const validData = parsedOvertimeUploadData.filter(d => d.isValid);
+            if (validData.length === 0) {
+                alert('Tidak ada data valid untuk diunggah.');
+                return;
+            }
+
+            const { error } = await dbClient.from('overtime').insert(validData);
+            if (error) {
+                alert('Gagal menyimpan batch data lembur: ' + error.message);
+                return;
+            }
+
+            alert(`Berhasil mengunggah ${validData.length} data lembur ke database!`);
+            cancelOvertimeUpload();
+            initOvertimeModule();
+        }
+
+        // ==========================================
+        // 11. DASHBOARD & ORGANISASI
         // ==========================================
         async function initDashboard() {
             const statEmp = document.getElementById('statTotalEmployees');

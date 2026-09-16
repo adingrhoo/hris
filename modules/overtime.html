@@ -1,0 +1,67 @@
+<div style="padding: 30px;">
+    <!-- HEADER MODUL -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: #1e293b; margin-bottom: 4px;">Rekapitulasi Lembur (Overtime)</h1>
+            <p style="font-size: 0.875rem; color: #64748b; margin: 0;">Kelola data lembur pegawai, input manual, atau unggah rekapitulasi data lembur secara massal.</p>
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="openManualOvertimeModal()" style="padding: 10px 16px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-plus"></i> Tambah Lembur Manual
+            </button>
+            <label style="padding: 10px 16px; background: #059669; color: white; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-excel"></i> Upload File Rekap
+                <input type="file" id="overtimeCsvFile" accept=".csv" style="display: none;" onchange="previewOvertimeCsv(event)">
+            </label>
+        </div>
+    </div>
+
+    <!-- AREA PREVIEW UPLOAD FILE (MUNCUL JIKA ADA FILE DIPILIH) -->
+    <div id="uploadPreviewCard" style="display: none; background: #f8fafc; border: 1px dashed #0284c7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 1rem; font-weight: 700; color: #0369a1; margin: 0;"><i class="fa-solid fa-triangle-exclamation"></i> Pratinjau Data Unggahan (Preview & Validasi)</h3>
+            <button onclick="cancelOvertimeUpload()" style="background: transparent; border: none; color: #64748b; cursor: pointer; font-weight: 600;">Batal</button>
+        </div>
+        <p style="font-size: 0.8rem; color: #475569; margin-bottom: 12px;">Pastikan semua baris berstatus valid sebelum Anda menekan tombol simpan ke database.</p>
+        <div style="background: white; border-radius: 8px; border: 1px solid #cbd5e1; overflow-x: auto; max-height: 250px; margin-bottom: 16px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                <thead>
+                    <tr style="background: #f1f5f9; color: #475569; border-bottom: 1px solid #cbd5e1;">
+                        <th style="padding: 10px 14px;">Employee ID</th>
+                        <th style="padding: 10px 14px;">Tanggal</th>
+                        <th style="padding: 10px 14px;">Jam Lembur</th>
+                        <th style="padding: 10px 14px;">Catatan</th>
+                        <th style="padding: 10px 14px;">Status Validasi</th>
+                    </tr>
+                </thead>
+                <tbody id="previewOvertimeTableBody">
+                    <!-- Data preview -->
+                </tbody>
+            </table>
+        </div>
+        <button id="btnConfirmUpload" onclick="confirmAndUploadOvertime()" style="padding: 10px 20px; background: #059669; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;" disabled>
+            Konfirmasi & Simpan ke Database
+        </button>
+    </div>
+
+    <!-- TABEL DATA LEMBUR UTAMA -->
+    <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: #f8fafc; color: #475569; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 14px 20px; font-weight: 600;">Nama & ID Karyawan</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Departemen</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Tanggal</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Total Lembur</th>
+                        <th style="padding: 14px 20px; font-weight: 600;">Catatan</th>
+                        <th style="padding: 14px 20px; font-weight: 600; text-align: center;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="overtimeTableBody" style="font-size: 0.875rem; color: #334155;">
+                    <!-- Data dimuat otomatis -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
