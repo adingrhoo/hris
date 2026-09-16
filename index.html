@@ -1172,6 +1172,15 @@
             }
         }
 
+        // ==========================================
+        // 12. ADD LEAVE MODULE & REVIEW WORKFLOW
+        // ==========================================
+        let globalLeaveTypesList = [
+            "Cuti Tahunan", "Cuti Sakit", "Cuti Haid", "Cuti Melahirkan", "Cuti Keguguran", 
+            "Cuti Panjang", "Cuti Bersama", "Izin Menikah", "Izin Menikahkan Anak", 
+            "Izin Khitanan Anak", "Izin Baptisan Anak", "Izin Kematian Keluarga", "Izin Istri Melahirkan/Keguguran"
+        ];
+
         async function initLeaveAddModule() {
             const today = new Date().toISOString().split('T')[0];
             const startDateEl = document.getElementById('inputLeaveStartDate');
@@ -1185,59 +1194,26 @@
             }
 
             renderEmployeeDropdownOptions(allEmployeesCache);
-            await loadLeaveTypesIntoSelect();
+            renderLeaveTypeDropdownOptions(globalLeaveTypesList);
 
-            // Tutup dropdown karyawan jika klik di luar area
             document.addEventListener('click', function(e) {
-                const container = document.getElementById('employeeDropdownContainer');
-                const inputSearch = document.getElementById('inputEmployeeSearch');
-                if (container && inputSearch) {
-                    if (!container.contains(e.target) && e.target !== inputSearch) {
-                        container.style.display = 'none';
-                    }
+                const empContainer = document.getElementById('employeeDropdownContainer');
+                const empSearch = document.getElementById('inputEmployeeSearch');
+                if (empContainer && empSearch && !empContainer.contains(e.target) && e.target !== empSearch) {
+                    empContainer.style.display = 'none';
                 }
-            });
-        }
 
-        // Fungsi Parameterisasi Jenis Cuti (Dinamis dari DB dengan Fallback)
-        async function loadLeaveTypesIntoSelect() {
-            const selectType = document.getElementById('selectLeaveType');
-            if (!selectType) return;
-
-            let leaveTypesList = [
-                "Cuti Tahunan",
-                "Cuti Sakit",
-                "Cuti Haid",
-                "Cuti Melahirkan",
-                "Cuti Keguguran",
-                "Cuti Panjang",
-                "Cuti Bersama",
-                "Izin Menikah",
-                "Izin Menikahkan Anak",
-                "Izin Khitanan Anak",
-                "Izin Baptisan Anak",
-                "Izin Kematian Keluarga",
-                "Izin Istri Melahirkan/Keguguran"
-            ];
-
-            if (dbClient) {
-                const { data, error } = await dbClient.from('leave_types').select('*').order('name');
-                if (!error && data && data.length > 0) {
-                    leaveTypesList = data.map(t => t.name);
+                const typeContainer = document.getElementById('leaveTypeDropdownContainer');
+                const typeSearch = document.getElementById('inputLeaveTypeSearch');
+                if (typeContainer && typeSearch && !typeContainer.contains(e.target) && e.target !== typeSearch) {
+                    typeContainer.style.display = 'none';
                 }
-            }
-
-            selectType.innerHTML = `<option value="" disabled selected>-- Pilih Jenis Cuti / Izin --</option>`;
-            leaveTypesList.forEach(type => {
-                selectType.innerHTML += `<option value="${type}">${type}</option>`;
             });
         }
 
         function toggleEmployeeDropdown(show) {
             const container = document.getElementById('employeeDropdownContainer');
-            if (container) {
-                container.style.display = show ? 'block' : 'none';
-            }
+            if (container) container.style.display = show ? 'block' : 'none';
         }
 
         function renderEmployeeDropdownOptions(employees) {
@@ -1264,7 +1240,6 @@
                     document.getElementById('inputEmployeeSearch').value = `${emp.employee_id} - ${emp.name} (${emp.department || '-'})`;
                     document.getElementById('selectedEmployeeId').value = emp.employee_id;
                     container.style.display = 'none';
-                    updateEmployeeLeaveBalanceInfo(emp.employee_id);
                 };
 
                 container.appendChild(item);
@@ -1282,34 +1257,48 @@
             renderEmployeeDropdownOptions(filtered);
         }
 
-        async function updateEmployeeLeaveBalanceInfo(empId) {
-            const infoDiv = document.getElementById('leaveBalanceInfoDisplay');
-            if (!infoDiv || !dbClient || !empId) return;
-
-            const currentYear = new Date().getFullYear();
-            const { data: balanceData, error } = await dbClient
-                .from('leave_balances')
-                .select('*')
-                .eq('employee_id', empId)
-                .eq('year', currentYear)
-                .single();
-
-            let total = 12;
-            let used = 0;
-            if (!error && balanceData) {
-                total = balanceData.total_quota;
-                used = balanceData.used_quota;
-            }
-            let remaining = total - used;
-
-            infoDiv.textContent = `Sisa Saldo Cuti Tahunan (${currentYear}): ${remaining} Hari (Total Hak: ${total}, Terpakai: ${used})`;
+        function toggleLeaveTypeDropdown(show) {
+            const container = document.getElementById('leaveTypeDropdownContainer');
+            if (container) container.style.display = show ? 'block' : 'none';
         }
 
-        async function submitLeaveForm(event) {
+        function renderLeaveTypeDropdownOptions(typesList) {
+            const container = document.getElementById('leaveTypeDropdownContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+            typesList.forEach(type => {
+                const item = document.createElement('div');
+                item.style.cssText = "padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.875rem; color: #334155;";
+                item.innerHTML = `<span>${type}</span>`;
+                
+                item.onmouseover = () => item.style.background = '#f8fafc';
+                item.onmouseout = () => item.style.background = '#fff';
+                
+                item.onclick = () => {
+                    document.getElementById('inputLeaveTypeSearch').value = type;
+                    document.getElementById('selectedLeaveType').value = type;
+                    container.style.display = 'none';
+                };
+
+                container.appendChild(item);
+            });
+        }
+
+        function filterLeaveTypeDropdown() {
+            const query = document.getElementById('inputLeaveTypeSearch').value.toLowerCase();
+            const filtered = globalLeaveTypesList.filter(t => t.toLowerCase().includes(query));
+            toggleLeaveTypeDropdown(true);
+            renderLeaveTypeDropdownOptions(filtered);
+        }
+
+        // --- STEP 1: PROCEED TO REVIEW ---
+        async function proceedToLeaveReview(event) {
             event.preventDefault();
 
             const empId = document.getElementById('selectedEmployeeId').value;
-            const leaveType = document.getElementById('selectLeaveType').value;
+            const empNameText = document.getElementById('inputEmployeeSearch').value;
+            const leaveType = document.getElementById('selectedLeaveType').value;
             const startDate = document.getElementById('inputLeaveStartDate').value;
             const endDate = document.getElementById('inputLeaveEndDate').value;
             const totalDays = parseInt(document.getElementById('inputLeaveTotalDays').value);
@@ -1334,6 +1323,102 @@
                 alert('Jumlah hari harus berupa angka yang valid.');
                 return;
             }
+
+            // Tampilkan teks ke Review Step
+            document.getElementById('reviewEmpText').textContent = empNameText;
+            document.getElementById('reviewTypeText').textContent = leaveType;
+            document.getElementById('reviewDateText').textContent = `${startDate} s/d ${endDate}`;
+            document.getElementById('reviewDaysText').textContent = `${totalDays} Hari Kerja`;
+            document.getElementById('reviewReasonText').textContent = reason;
+
+            const balanceBox = document.getElementById('reviewBalanceBox');
+            const btnConfirm = document.getElementById('btnConfirmSubmitLeave');
+            const currentYear = new Date().getFullYear();
+
+            balanceBox.innerHTML = `<div style="color: #64748b; font-size: 0.875rem;">Memeriksa saldo cuti karyawan di database...</div>`;
+            
+            // Switch tampilan ke Step 2
+            document.getElementById('leaveFormStep1').style.display = 'none';
+            document.getElementById('leaveFormStep2').style.display = 'block';
+
+            // Ambil data saldo cuti karyawan terpilih
+            let total = 12;
+            let used = 0;
+            if (dbClient) {
+                const { data: balanceData, error } = await dbClient
+                    .from('leave_balances')
+                    .select('*')
+                    .eq('employee_id', empId)
+                    .eq('year', currentYear)
+                    .single();
+
+                if (!error && balanceData) {
+                    total = balanceData.total_quota;
+                    used = balanceData.used_quota;
+                }
+            }
+            let remaining = total - used;
+
+            if (leaveType === 'Cuti Tahunan') {
+                if (totalDays > remaining) {
+                    balanceBox.style.background = '#fee2e2';
+                    balanceBox.style.borderColor = '#fca5a5';
+                    balanceBox.innerHTML = `
+                        <div style="font-weight: 700; color: #991b1b; margin-bottom: 4px; font-size: 0.95rem;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> DITOLAK / GAGAL: MELEBIHI KUOTA CUTI
+                        </div>
+                        <div style="font-size: 0.875rem; color: #7f1d1d;">
+                            Pegawai ini mengajukan <strong>${totalDays} hari</strong>, namun sisa saldo cuti tahunan (${currentYear}) hanya tersisa <strong>${remaining} hari</strong> (Total Hak: ${total}, Terpakai: ${used}). Pengajuan tidak dapat dilanjutkan.
+                        </div>
+                    `;
+                    btnConfirm.disabled = true;
+                    btnConfirm.style.background = '#94a3b8';
+                    btnConfirm.style.cursor = 'not-allowed';
+                } else {
+                    balanceBox.style.background = '#dcfce7';
+                    balanceBox.style.borderColor = '#86efac';
+                    balanceBox.innerHTML = `
+                        <div style="font-weight: 700; color: #166534; margin-bottom: 4px; font-size: 0.95rem;">
+                            <i class="fa-solid fa-circle-check"></i> STATUS VALID: SALDO CUTI MENCUKUPI
+                        </div>
+                        <div style="font-size: 0.875rem; color: #14532d;">
+                            Sisa saldo cuti tahunan (${currentYear}): <strong>${remaining} hari</strong> dari total hak ${total} hari (Terpakai: ${used}). Pengajuan ${totalDays} hari dapat disetujui.
+                        </div>
+                    `;
+                    btnConfirm.disabled = false;
+                    btnConfirm.style.background = '#2563eb';
+                    btnConfirm.style.cursor = 'pointer';
+                }
+            } else {
+                balanceBox.style.background = '#e0f2fe';
+                balanceBox.style.borderColor = '#bae6fd';
+                balanceBox.innerHTML = `
+                    <div style="font-weight: 700; color: #0369a1; margin-bottom: 4px; font-size: 0.95rem;">
+                        <i class="fa-solid fa-circle-info"></i> INFORMASI CUTI / IZIN KHUSUS
+                    </div>
+                    <div style="font-size: 0.875rem; color: #075985;">
+                        Jenis pengajuan ini (${leaveType}) tidak memotong kuota cuti tahunan. Sisa cuti tahunan saat ini: <strong>${remaining} hari</strong> dari total ${total} hari.
+                    </div>
+                `;
+                btnConfirm.disabled = false;
+                btnConfirm.style.background = '#2563eb';
+                btnConfirm.style.cursor = 'pointer';
+            }
+        }
+
+        function backToLeaveFormStep1() {
+            document.getElementById('leaveFormStep2').style.display = 'none';
+            document.getElementById('leaveFormStep1').style.display = 'block';
+        }
+
+        // --- STEP 3: FINAL SUBMIT ---
+        async function submitFinalLeaveForm() {
+            const empId = document.getElementById('selectedEmployeeId').value;
+            const leaveType = document.getElementById('selectedLeaveType').value;
+            const startDate = document.getElementById('inputLeaveStartDate').value;
+            const endDate = document.getElementById('inputLeaveEndDate').value;
+            const totalDays = parseInt(document.getElementById('inputLeaveTotalDays').value);
+            const reason = document.getElementById('inputLeaveReason').value.trim();
 
             const { error } = await dbClient.from('leaves').insert([{
                 employee_id: empId,
@@ -1418,7 +1503,7 @@
         }
 
         // ==========================================
-        // 12. DASHBOARD & ORGANISASI
+        // 14. DASHBOARD & ORGANISASI
         // ==========================================
         async function initDashboard() {
             const statEmp = document.getElementById('statTotalEmployees');
