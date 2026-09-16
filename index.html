@@ -1325,6 +1325,11 @@
             initLeaveModule();
         }
 
+        // Fungsi fallback/jembatan pengaman untuk mencegah error ReferenceError jika cache memanggil fungsi lama
+        function openLeaveRequestModal() {
+            loadModule('leave-add');
+        }
+
         // ==========================================
         // 12. DASHBOARD & ORGANISASI
         // ==========================================
